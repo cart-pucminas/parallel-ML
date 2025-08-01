@@ -1,0 +1,28 @@
+[
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-c",
+      "-I/nix/store/w55irii18rrlpr96siw092asjdmv95x3-sdl3-3.2.10-dev/include",
+      "-o",
+      "bin/main",
+      "src/main.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/main.c",
+    "output": "/home/mateus/repos/perceptron/bin/main"
+  },
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-c",
+      "-I/nix/store/w55irii18rrlpr96siw092asjdmv95x3-sdl3-3.2.10-dev/include",
+      "-o",
+      "bin/main",
+      "src/dataloader.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/dataloader.c",
+    "output": "/home/mateus/repos/perceptron/bin/main"
+  }
+]

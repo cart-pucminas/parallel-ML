@@ -1,91 +1,50 @@
-#include <stdint.h>
 #include <stdio.h>
 
-#define MAGIC 2049
+#include "dataloader.h"
 
-size_t fread_big_endian(void *restrict ptr, size_t size, size_t n,
-                        FILE *restrict stream);
+const char grayscaleMap[] = ".:-=+*#%@";
+
+int init();
 
 int main(void)
 {
-    FILE *labels_file = fopen("../input/t10k-labels.idx1-ubyte", "rb");
-
-    if (labels_file == NULL)
+    Dataset *dataset = loadDataset("../input/train-labels.idx1-ubyte",
+                                   "../input/train-images.idx3-ubyte");
+    if (dataset == NULL)
     {
-        perror("Failed to open file");
+        printf("Dataset error: %s", dataset_getError());
         return 1;
     }
 
-    int magic = 1, size = 1;
+    FILE *txt = fopen("../out.txt", "w");
 
-    if (fread_big_endian(&magic, sizeof(int), 1, labels_file) != 1)
+    if (txt == NULL)
     {
-        printf("Failed to read file\n");
-        fclose(labels_file);
-        return 1;
-    }
-    if (fread_big_endian(&size, sizeof(int), 1, labels_file) != 1)
-    {
-        printf("Failed to read file\n");
-        fclose(labels_file);
+        perror("u probably dumb but who knows");
+        fclose(txt);
         return 1;
     }
 
-    if (magic != MAGIC)
+    for (int i = 0; i < dataset->size; i++)
     {
-        printf("Magic number mismatch, expected 2049, got %d\n", magic);
-        fclose(labels_file);
-        return 1;
-    }
-
-    uint8_t labels[size];
-
-    for (int i = 0; i < size; i++)
-    {
-        if (fread(&labels[i], sizeof(uint8_t), 1, labels_file) != 1)
+        printf("printing image %d\n", i);
+        fprintf(txt, "%u\n", dataset->labels[i]);
+        fputc('\n', txt);
+        for (int h = 0; h < dataset->imageHeight; h++)
         {
-            printf("Failed to read label %d", i + 1);
-            fclose(labels_file);
-            return 1;
+            for (int w = 0; w < dataset->imageHeight; w++)
+            {
+                int idx = (h * dataset->imageWidth) + w;
+                int ascii = dataset->images[i][idx] / 29;
+                fputc(grayscaleMap[ascii], txt);
+            }
+            fputc('\n', txt);
         }
-        printf("label %d: %d\n", i, labels[i]);
+        fputc('\n', txt);
     }
 
-    printf("successfuly read all labels!\n");
-
-    fclose(labels_file);
+    fclose(txt);
+    closeDataset(dataset);
 
     return 0;
-}
-
-size_t fread_big_endian(void *restrict ptr, size_t size, size_t n,
-                        FILE *restrict stream)
-{
-    if (size == 0 || n == 0)
-        return 0;
-
-    size_t read_bytes = 0;
-    uint8_t *byte = ((uint8_t *)ptr) + size - 1;
-
-    for (int i = 0; i < n; i++)
-    {
-        for (size_t j = 0; j < size; j++)
-        {
-            fread(byte, sizeof(uint8_t), 1, stream);
-
-            if (feof(stream))
-                return read_bytes / size;
-            if (ferror(stream))
-            {
-                perror("Read error");
-                return read_bytes / size;
-            }
-
-            byte--;
-            read_bytes++;
-        }
-        byte += (size * 2) - 1;
-    }
-
-    return read_bytes / size;
 }
