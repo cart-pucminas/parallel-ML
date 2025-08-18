@@ -16,8 +16,6 @@ int main(int argc, char **argv)
              "/home/mateus/repos/perceptron/input/train-labels.idx1-ubyte",
          *images =
              "/home/mateus/repos/perceptron/input/train-images.idx3-ubyte";
-    int mode = -1;
-    ActivationFunction activation = SIGMOID;
 
     Dataset *learningDataset = loadDataset(labels, images);
     if (learningDataset == NULL)
@@ -91,7 +89,7 @@ Params *parseArgs(int argc, char **argv)
             char *value = argv[i] + 16;
             params->hiddenLayerCount = 0;
             int *sizes = malloc(100 * sizeof(int));
-            int idx;
+            int idx = 0;
             char *pTok = strtok(value, ",");
             while (pTok != NULL)
             {
@@ -110,6 +108,7 @@ Params *parseArgs(int argc, char **argv)
                 char *pEnd;
                 sizes[idx] = strtol(pTok, &pEnd, 10);
                 pTok = strtok(value, ",");
+                idx++;
             }
         }
         else if (strncmp(argv[i], "--learning-rate", 15) == 0)
