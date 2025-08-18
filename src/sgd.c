@@ -260,9 +260,8 @@ void sgd_classify(NN *network, Batch *batch, ActivationFunction activation)
         }
         if (maxIndex == trueMaxIndex)
             hits++;
-
-        printf("got %d expected %d\n", maxIndex, trueMaxIndex);
     }
-    printf("%ld/%ld (%.2f%%)", hits, batch->size,
+
+    printf("%ld/%ld (%.2f%%)\n", hits, batch->size,
            ((float)hits / batch->size) * 100.0f);
 }
