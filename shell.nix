@@ -2,8 +2,9 @@
 pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
-    sdl3
+    gdb
     bear
     pkg-config
+    valgrind
   ];
 }

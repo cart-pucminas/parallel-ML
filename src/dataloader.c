@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#include "dataset.h"
 
 #define LABEL_MAGIC 2049
 #define IMAGE_MAGIC 2051

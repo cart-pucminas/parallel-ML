@@ -2,27 +2,71 @@
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
       "-c",
-      "-I/nix/store/w55irii18rrlpr96siw092asjdmv95x3-sdl3-3.2.10-dev/include",
       "-o",
-      "bin/main",
-      "src/main.c"
+      "obj/network.o",
+      "src/network.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
-    "file": "/home/mateus/repos/perceptron/src/main.c",
-    "output": "/home/mateus/repos/perceptron/bin/main"
+    "file": "/home/mateus/repos/perceptron/src/network.c",
+    "output": "/home/mateus/repos/perceptron/obj/network.o"
   },
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
       "-c",
-      "-I/nix/store/w55irii18rrlpr96siw092asjdmv95x3-sdl3-3.2.10-dev/include",
       "-o",
-      "bin/main",
+      "obj/dataloader.o",
       "src/dataloader.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/dataloader.c",
-    "output": "/home/mateus/repos/perceptron/bin/main"
+    "output": "/home/mateus/repos/perceptron/obj/dataloader.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
+      "-c",
+      "-o",
+      "obj/sgd.o",
+      "src/sgd.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/sgd.c",
+    "output": "/home/mateus/repos/perceptron/obj/sgd.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
+      "-c",
+      "-o",
+      "obj/perceptron.o",
+      "src/perceptron.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/perceptron.c",
+    "output": "/home/mateus/repos/perceptron/obj/perceptron.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
+      "-c",
+      "-o",
+      "obj/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/main.c",
+    "output": "/home/mateus/repos/perceptron/obj/main.o"
   }
 ]
