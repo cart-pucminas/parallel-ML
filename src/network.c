@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-NN *constructNetwork(int layerCount, size_t *layersSizes)
+NN *constructNetwork(int layerCount, size_t *layersSizes, float learningRate)
 {
     srand(time(NULL));
 
@@ -15,7 +15,7 @@ NN *constructNetwork(int layerCount, size_t *layersSizes)
     network->neurons = malloc(layerCount * sizeof(float *));
     network->weights = malloc((layerCount - 1) * sizeof(float *));
     network->biases = malloc((layerCount - 1) * sizeof(float *));
-    network->learningRate = 2;
+    network->learningRate = learningRate;
 
     for (int l = 0; l < layerCount; l++)
     {

@@ -34,8 +34,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    learn(learningDataset);
-    classify(classificationDataset);
+    init(params, learningDataset, classificationDataset);
 
     printf("all done :D\n");
     return 0;
@@ -43,7 +42,7 @@ int main(int argc, char **argv)
 
 Params *parseArgs(int argc, char **argv)
 {
-    Params *params = malloc(sizeof(Params));
+    Params *params = calloc(1, sizeof(Params));
     char *hiddenLayers;
 
     for (int i = 1; i < argc; i++)
@@ -87,7 +86,6 @@ Params *parseArgs(int argc, char **argv)
                 return NULL;
             }
             char *value = argv[i] + 16;
-            params->hiddenLayerCount = 0;
             int *sizes = malloc(100 * sizeof(int));
             int idx = 0;
             char *pTok = strtok(value, ",");
@@ -107,9 +105,14 @@ Params *parseArgs(int argc, char **argv)
                 }
                 char *pEnd;
                 sizes[idx] = strtol(pTok, &pEnd, 10);
-                pTok = strtok(value, ",");
+                pTok = strtok(NULL, ",");
                 idx++;
             }
+            params->hiddenLayerCount = idx;
+            params->hiddenLayerSizes = malloc(idx * sizeof(int));
+            for (int j = 0; j < idx; j++)
+                params->hiddenLayerSizes[j] = sizes[j];
+            free(sizes);
         }
         else if (strncmp(argv[i], "--learning-rate", 15) == 0)
         {
@@ -125,15 +128,18 @@ Params *parseArgs(int argc, char **argv)
             {
                 int offset = '9' - value[j];
 
-                if ((value[i] == '.' && dot) || offset < 0 || offset > 9)
+                if ((value[j] == '.' && dot) ||
+                    (value[j] != '.' && (offset < 0 || offset > 9)))
                 {
-                    printf("'--hidden-size' requires an integer value\n");
+                    printf("'learning-rate' requires a decimal value\n");
                     return NULL;
                 }
 
-                if (value[i] == '.')
+                if (value[j] == '.')
                     dot = 1;
             }
+            char *pEnd;
+            params->learningRate = strtof(value, &pEnd);
         }
         else if (strncmp(argv[i], "--batch-size", 12) == 0)
         {
@@ -142,7 +148,7 @@ Params *parseArgs(int argc, char **argv)
                 printf("'--batch-size' requires an integer value\n");
                 return NULL;
             }
-            char *value = argv[i] + 12;
+            char *value = argv[i] + 13;
             size = strlen(value);
             for (int j = 0; j < size; j++)
             {
@@ -154,7 +160,7 @@ Params *parseArgs(int argc, char **argv)
                 }
             }
             char *pEnd;
-            params->hiddenLayerCount = strtol(value, &pEnd, 10);
+            params->miniBatchSize = strtol(value, &pEnd, 10);
         }
         else if (strncmp(argv[i], "--epochs", 8) == 0)
         {
@@ -175,7 +181,7 @@ Params *parseArgs(int argc, char **argv)
                 }
             }
             char *pEnd;
-            params->hiddenLayerCount = strtol(value, &pEnd, 10);
+            params->epochs = strtol(value, &pEnd, 10);
         }
     }
 

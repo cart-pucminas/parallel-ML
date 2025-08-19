@@ -141,18 +141,18 @@ void backPropagation(NN *network, float *groundTruth, float *nablaW,
     }
 }
 
-void shuffle(Dataset *dataset)
+void shuffle(Batch *batch)
 {
     srand(time(NULL));
 
-    for (int i = 0; i < dataset->size; i++)
+    for (int i = 0; i < batch->size; i++)
     {
-        int j = rand() % dataset->size;
-        u_int8_t *image = dataset->images[i], label = dataset->labels[i];
-        dataset->images[i] = dataset->images[j];
-        dataset->labels[i] = dataset->labels[j];
-        dataset->images[j] = image;
-        dataset->labels[j] = label;
+        int j = rand() % batch->size;
+        float *input = batch->inputs[i], *groundTruth = batch->groundTruths[i];
+        batch->inputs[i] = batch->inputs[j];
+        batch->groundTruths[i] = batch->groundTruths[j];
+        batch->inputs[j] = input;
+        batch->groundTruths[j] = groundTruth;
     }
 }
 

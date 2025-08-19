@@ -1,16 +1,15 @@
 #include "perceptron.h"
 
+#include <stdio.h>
+
 #include "network.h"
 #include "sgd.h"
 
-static ActivationFunction activation = SIGMOID;
-static NN *network = NULL;
-
-Batch *toNNBatch(Dataset *dataset)
+Batch *toNNBatch(Dataset *dataset, size_t miniBatchSize)
 {
     Batch *batch = malloc(sizeof(Batch));
     batch->size = dataset->size;
-    batch->miniBatchSize = 10;
+    batch->miniBatchSize = miniBatchSize;
     batch->inputs = malloc(dataset->size * sizeof(float *));
     batch->groundTruths = malloc(dataset->size * sizeof(float *));
     for (int i = 0; i < dataset->size; i++)
@@ -39,32 +38,27 @@ void freeBatch(Batch *batch)
     free(batch);
 }
 
-void learn(Dataset *dataset)
+void init(Params *params, Dataset *learningDataset,
+          Dataset *classificationDataset)
 {
-    if (network == NULL)
+    size_t *sizes = malloc((params->hiddenLayerCount + 2) * sizeof(size_t));
+
+    sizes[0] = 784;
+    sizes[params->hiddenLayerCount + 1] = 10;
+    for (int i = 0; i < params->hiddenLayerCount; i++)
+        sizes[i + 1] = params->hiddenLayerSizes[i];
+
+    NN *network = constructNetwork(params->hiddenLayerCount + 2, sizes,
+                                   params->learningRate);
+
+    Batch *learningBatch = toNNBatch(learningDataset, params->miniBatchSize);
+    Batch *classificationBatch =
+        toNNBatch(classificationDataset, params->miniBatchSize);
+
+    for (int i = 0; i < params->epochs; i++)
     {
-        size_t sizes[] = {dataset->imageWidth * dataset->imageHeight, 15, 10};
-        network = constructNetwork(3, sizes);
+        printf("Epoch %d\n", i + 1);
+        sgd_learn(network, learningBatch, params->activation);
+        sgd_classify(network, classificationBatch, params->activation);
     }
-
-    Batch *batch = toNNBatch(dataset);
-
-    sgd_learn(network, batch, activation);
-
-    freeBatch(batch);
-}
-
-void classify(Dataset *dataset)
-{
-    if (network == NULL)
-    {
-        size_t sizes[] = {dataset->imageWidth * dataset->imageHeight, 10};
-        network = constructNetwork(2, sizes);
-    }
-
-    Batch *batch = toNNBatch(dataset);
-
-    sgd_classify(network, batch, activation);
-
-    freeBatch(batch);
 }

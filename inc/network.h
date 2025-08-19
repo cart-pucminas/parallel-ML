@@ -24,7 +24,7 @@ typedef struct
     size_t miniBatchSize;
 } Batch;
 
-NN *constructNetwork(int layerCount, size_t *layersSizes);
+NN *constructNetwork(int layerCount, size_t *layersSizes, float learningRate);
 void freeNetwork(NN *network);
 void printNN(NN *network);
 

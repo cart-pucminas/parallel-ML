@@ -14,8 +14,6 @@ typedef struct
     int epochs;
 } Params;
 
-void setActivationFunction(ActivationFunction af);
-void learn(Dataset *dataset);
-void classify(Dataset *dataset);
+void init(Params *params, Dataset *learningDataset, Dataset *classificationDataset);
 
 #endif
