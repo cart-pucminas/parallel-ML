@@ -10,7 +10,6 @@
 
 #define IDX2(y, x, nX) ((y) * (nX) + (x))
 
-#define SIGMOID_F(x) (1.0f / (1.0f + expf(-(x))))
 #define TANH_F(x) (x)
 #define RELU_F(x) (x)
 #define SOFTMAX_F(x) (x)
@@ -21,23 +20,23 @@
 
 void feedForward(NN *network, float **dActZ, ActivationFunction activation)
 {
-    int rows = 1, cols = 1;
-    float *l = NULL, *prevL = NULL, *w = NULL, *b = NULL;
-
     switch (activation)
     {
     case SIGMOID:
         for (int i = 1; i < network->layerCount; i++)
         {
-            rows = network->layersSizes[i], cols = network->layersSizes[i - 1],
-            l = network->neurons[i], prevL = network->neurons[i - 1],
-            w = network->weights[i - 1], b = network->biases[i - 1];
+            int rows = network->layersSizes[i],
+                cols = network->layersSizes[i - 1];
+            float *l = network->neurons[i], *prevL = network->neurons[i - 1],
+                  *w = network->weights[i - 1], *b = network->biases[i - 1];
+
+            USE_FF_STRATEGY
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
-                float a = SIGMOID_F(l[j] + b[j]);
+                float a = 1.0f / 1.0f + expf(-(l[j] + b[j]));
                 if (dActZ != NULL)
                     dActZ[i - 1][j] = a * (1.0f - a);
                 l[j] = a;
@@ -47,9 +46,12 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
     case TANH:
         for (int i = 1; i < network->layerCount; i++)
         {
-            rows = network->layersSizes[i], cols = network->layersSizes[i - 1],
-            l = network->neurons[i], prevL = network->neurons[i - 1],
-            w = network->weights[i - 1], b = network->biases[i - 1];
+            int rows = network->layersSizes[i],
+                cols = network->layersSizes[i - 1];
+            float *l = network->neurons[i], *prevL = network->neurons[i - 1],
+                  *w = network->weights[i - 1], *b = network->biases[i - 1];
+
+            USE_FF_STRATEGY
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -64,9 +66,12 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
     case RELU:
         for (int i = 1; i < network->layerCount; i++)
         {
-            rows = network->layersSizes[i], cols = network->layersSizes[i - 1],
-            l = network->neurons[i], prevL = network->neurons[i - 1],
-            w = network->weights[i - 1], b = network->biases[i - 1];
+            int rows = network->layersSizes[i],
+                cols = network->layersSizes[i - 1];
+            float *l = network->neurons[i], *prevL = network->neurons[i - 1],
+                  *w = network->weights[i - 1], *b = network->biases[i - 1];
+
+            USE_FF_STRATEGY
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -81,9 +86,12 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
     case SOFTMAX:
         for (int i = 1; i < network->layerCount; i++)
         {
-            rows = network->layersSizes[i], cols = network->layersSizes[i - 1],
-            l = network->neurons[i], prevL = network->neurons[i - 1],
-            w = network->weights[i - 1], b = network->biases[i - 1];
+            int rows = network->layersSizes[i],
+                cols = network->layersSizes[i - 1];
+            float *l = network->neurons[i], *prevL = network->neurons[i - 1],
+                  *w = network->weights[i - 1], *b = network->biases[i - 1];
+
+            USE_FF_STRATEGY
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -170,8 +178,8 @@ void sgd_learn(NN *network, Batch *batch, ActivationFunction activation)
         dActZ[i - 1] = malloc(network->layersSizes[i] * sizeof(float));
     }
 
-    size_t mini_i = 0;
-    while (mini_i < batch->size)
+    size_t miniBatch_i = 0;
+    while (miniBatch_i < batch->size)
     {
         for (int i = 0; i < network->totalSynapses; i++)
             nablaW[i] = 0;
@@ -179,16 +187,16 @@ void sgd_learn(NN *network, Batch *batch, ActivationFunction activation)
             nablaB[i] = 0;
 
         int actualBatchSize = 0;
-        for (actualBatchSize = 0;
-             actualBatchSize < batch->miniBatchSize && mini_i < batch->size;
-             actualBatchSize++, mini_i++)
+        for (actualBatchSize = 0; actualBatchSize < batch->miniBatchSize &&
+                                  miniBatch_i < batch->size;
+             actualBatchSize++, miniBatch_i++)
         {
             for (int j = 0; j < network->layersSizes[0]; j++)
-                network->neurons[0][j] = batch->inputs[mini_i][j];
+                network->neurons[0][j] = batch->inputs[miniBatch_i][j];
 
             feedForward(network, dActZ, activation);
-            backPropagation(network, batch->groundTruths[mini_i], localNablaW,
-                            localNablaB, dActZ, partials);
+            backPropagation(network, batch->groundTruths[miniBatch_i],
+                            localNablaW, localNablaB, dActZ, partials);
 
             for (int k = 0; k < network->totalSynapses; k++)
                 nablaW[k] += localNablaW[k];
@@ -216,9 +224,9 @@ void sgd_learn(NN *network, Batch *batch, ActivationFunction activation)
             }
         }
 
-        printf("%ld out of %ld batches\n", mini_i / batch->miniBatchSize,
+        printf("%ld out of %ld batches\n", miniBatch_i / batch->miniBatchSize,
                batch->size / batch->miniBatchSize);
-        if ((mini_i + 1) < batch->size)
+        if ((miniBatch_i + 1) < batch->size)
             CLRLINE;
     }
 

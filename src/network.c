@@ -22,6 +22,7 @@ NN *constructNetwork(int layerCount, size_t *layersSizes, float learningRate)
         network->layersSizes[l] = layersSizes[l];
         network->neurons[l] = calloc(layersSizes[l], sizeof(float));
         network->totalNeurons += layersSizes[l];
+
         if (network->maxLayerSize < layersSizes[l])
             network->maxLayerSize = layersSizes[l];
 
@@ -54,12 +55,11 @@ NN *constructNetwork(int layerCount, size_t *layersSizes, float learningRate)
 void freeNetwork(NN *network)
 {
     free(network->neurons[0]);
-    free(network->biases[0]);
     for (int i = 1; i < network->layerCount; i++)
     {
         free(network->neurons[i]);
-        free(network->weights[i]);
-        free(network->biases[i]);
+        free(network->weights[i - 1]);
+        free(network->biases[i - 1]);
     }
     free(network->neurons);
     free(network->weights);

@@ -38,6 +38,12 @@ void freeBatch(Batch *batch)
     free(batch);
 }
 
+void freeParams(Params *params)
+{
+    free(params->hiddenLayerSizes);
+    free(params);
+}
+
 void init(Params *params, Dataset *learningDataset,
           Dataset *classificationDataset)
 {
@@ -51,6 +57,8 @@ void init(Params *params, Dataset *learningDataset,
     NN *network = constructNetwork(params->hiddenLayerCount + 2, sizes,
                                    params->learningRate);
 
+    free(sizes);
+
     Batch *learningBatch = toNNBatch(learningDataset, params->miniBatchSize);
     Batch *classificationBatch =
         toNNBatch(classificationDataset, params->miniBatchSize);
@@ -61,4 +69,8 @@ void init(Params *params, Dataset *learningDataset,
         sgd_learn(network, learningBatch, params->activation);
         sgd_classify(network, classificationBatch, params->activation);
     }
+
+    freeBatch(learningBatch);
+    freeBatch(classificationBatch);
+    freeNetwork(network);
 }

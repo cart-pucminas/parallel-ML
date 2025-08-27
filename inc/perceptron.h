@@ -15,5 +15,6 @@ typedef struct
 } Params;
 
 void init(Params *params, Dataset *learningDataset, Dataset *classificationDataset);
+void freeParams(Params *params);
 
 #endif

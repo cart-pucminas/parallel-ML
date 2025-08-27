@@ -89,6 +89,8 @@ uint8_t *readLabels(const char *restrict path, int *restrict size_p)
         return NULL;
     }
 
+    fclose(file);
+
     return labels;
 }
 
@@ -161,6 +163,7 @@ uint8_t **readImages(const char *restrict path, int *restrict size_p,
     }
 
     fclose(file);
+
     return images;
 }
 
@@ -182,12 +185,17 @@ Dataset *loadDataset(const char *restrict labelsPath,
     {
         errorMessage = "Could not read images";
         return NULL;
+        free(labels);
     }
 
     if (labelsSize != imagesSize)
     {
         errorMessage = "Label and image count are not the same";
         return NULL;
+        free(labels);
+        for (int i = 0; i < imagesSize; i++)
+            free(images[i]);
+        free(images);
     }
 
     Dataset *dataset = malloc(sizeof(Dataset));
@@ -200,7 +208,7 @@ Dataset *loadDataset(const char *restrict labelsPath,
     return dataset;
 }
 
-int closeDataset(Dataset *dataset)
+int freeDataset(Dataset *dataset)
 {
     for (int i = 0; i < dataset->size; i++)
     {

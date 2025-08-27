@@ -5,7 +5,7 @@
 
 Dataset *loadDataset(const char *labelPath, const char *imagesPath);
 
-int closeDataset(Dataset *dataset);
+int freeDataset(Dataset *dataset);
 
 const char *dataset_getError(void);
 

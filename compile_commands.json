@@ -6,12 +6,26 @@
       "-Isrc",
       "-c",
       "-o",
-      "obj/network.o",
+      ".obj/profiler.o",
+      "src/profiler.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/profiler.c",
+    "output": "/home/mateus/repos/perceptron/.obj/profiler.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-Iinc",
+      "-Isrc",
+      "-c",
+      "-o",
+      ".obj/network.o",
       "src/network.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/network.c",
-    "output": "/home/mateus/repos/perceptron/obj/network.o"
+    "output": "/home/mateus/repos/perceptron/.obj/network.o"
   },
   {
     "arguments": [
@@ -20,12 +34,12 @@
       "-Isrc",
       "-c",
       "-o",
-      "obj/dataloader.o",
+      ".obj/dataloader.o",
       "src/dataloader.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/dataloader.c",
-    "output": "/home/mateus/repos/perceptron/obj/dataloader.o"
+    "output": "/home/mateus/repos/perceptron/.obj/dataloader.o"
   },
   {
     "arguments": [
@@ -34,12 +48,12 @@
       "-Isrc",
       "-c",
       "-o",
-      "obj/sgd.o",
+      ".obj/sgd.o",
       "src/sgd.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/sgd.c",
-    "output": "/home/mateus/repos/perceptron/obj/sgd.o"
+    "output": "/home/mateus/repos/perceptron/.obj/sgd.o"
   },
   {
     "arguments": [
@@ -48,12 +62,12 @@
       "-Isrc",
       "-c",
       "-o",
-      "obj/perceptron.o",
+      ".obj/perceptron.o",
       "src/perceptron.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/perceptron.c",
-    "output": "/home/mateus/repos/perceptron/obj/perceptron.o"
+    "output": "/home/mateus/repos/perceptron/.obj/perceptron.o"
   },
   {
     "arguments": [
@@ -62,11 +76,11 @@
       "-Isrc",
       "-c",
       "-o",
-      "obj/main.o",
+      ".obj/main.o",
       "src/main.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
     "file": "/home/mateus/repos/perceptron/src/main.c",
-    "output": "/home/mateus/repos/perceptron/obj/main.o"
+    "output": "/home/mateus/repos/perceptron/.obj/main.o"
   }
 ]

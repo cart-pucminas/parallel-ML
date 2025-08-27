@@ -7,4 +7,8 @@ pkgs.mkShell {
     pkg-config
     valgrind
   ];
+
+  shellHook = ''
+    fish
+  '';
 }

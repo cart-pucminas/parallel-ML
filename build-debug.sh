@@ -15,3 +15,4 @@ gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/sgd.c -o .obj/sgd.o
 gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/perceptron.c -o .obj/perceptron.o
 gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/main.c -o .obj/main.o
 gcc -g -fsanitize=address .obj/*.o -o bin/debug/main -lm
+rm .obj/main.o
