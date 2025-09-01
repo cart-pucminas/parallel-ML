@@ -125,3 +125,29 @@ void printNN(NN *nn)
         }
     }
 }
+
+int persistNetwowrk(NN *network, const char *path)
+{
+    FILE *file = fopen(path, "wb");
+
+    if (!file)
+        return 0;
+
+    fwrite(&network->learningRate, sizeof(float), 1, file);
+    fwrite(&network->layerCount, sizeof(size_t), 1, file);
+    for (int i = 0; i < network->layerCount; i++)
+    {
+        fwrite(&network->layersSizes[i], sizeof(size_t), 1, file);
+        fwrite(network->neurons[i], sizeof(float), network->layersSizes[i],
+               file);
+    }
+    for (int i = 1; i < network->layerCount; i++)
+        fwrite(network->biases[i], sizeof(float), network->layersSizes[i],
+               file);
+    for (int i = 1; i < network->layerCount; i++)
+        fwrite(network->weights[i], sizeof(float),
+               network->layersSizes[i] * network->layersSizes[i - 1], file);
+
+    fclose(file);
+    return 1;
+}

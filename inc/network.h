@@ -27,5 +27,6 @@ typedef struct
 NN *constructNetwork(int layerCount, size_t *layersSizes, float learningRate);
 void freeNetwork(NN *network);
 void printNN(NN *network);
+int persistNetwork(NN *network, const char *path);
 
 #endif
