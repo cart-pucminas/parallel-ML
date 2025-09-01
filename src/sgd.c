@@ -30,10 +30,11 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
-            USE_FF_STRATEGY
+            FEED_FORWARD_PARALLEL_STRATEGY_1_1
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+                FEED_FORWARD_PARALLEL_STRATEGY_1_2
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 float a = 1.0f / 1.0f + expf(-(l[j] + b[j]));
@@ -51,10 +52,11 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
-            USE_FF_STRATEGY
+            FEED_FORWARD_PARALLEL_STRATEGY_1_1
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+                FEED_FORWARD_PARALLEL_STRATEGY_1_2
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)
@@ -71,10 +73,11 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
-            USE_FF_STRATEGY
+            FEED_FORWARD_PARALLEL_STRATEGY_1_1
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+                FEED_FORWARD_PARALLEL_STRATEGY_1_2
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)
@@ -91,10 +94,11 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
-            USE_FF_STRATEGY
+            FEED_FORWARD_PARALLEL_STRATEGY_1_1
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+                FEED_FORWARD_PARALLEL_STRATEGY_1_2
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)
@@ -112,38 +116,56 @@ void backPropagation(NN *network, float *groundTruth, float *nablaW,
     float *w_p = &nablaW[network->totalSynapses - 1],
           *b_p = &nablaB[network->totalNeurons - 1];
 
-    for (int i = network->layersSizes[network->layerCount - 1] - 1; i > -1; i--)
+    BACK_PROPAGATION_PARALLEL_STRATEGY_1_1
     {
-        *b_p = partials[network->layerCount - 2][i] =
-            (dZActivation[network->layerCount - 2][i]) * 2 *
-            (network->neurons[network->layerCount - 1][i] - groundTruth[i]);
-        b_p--;
-        for (int j = network->layersSizes[network->layerCount - 2] - 1; j > -1;
-             j--)
+        BACK_PROPAGATION_PARALLEL_STRATEGY_1_1_1
+        for (int i = network->layersSizes[network->layerCount - 1] - 1; i > -1;
+             i--)
         {
-            *w_p = network->neurons[network->layerCount - 2][j] *
-                   partials[network->layerCount - 2][i];
-            w_p--;
-        }
-    }
-
-    for (int i = network->layerCount - 2; i > 0; i--)
-    {
-        for (int j = network->layersSizes[i] - 1; j > -1; j--)
-        {
-            float partial = 0;
-            for (int k = network->layersSizes[i + 1] - 1; k > -1; k--)
-            {
-                partial +=
-                    network->weights[i][IDX2(k, j, network->layersSizes[i])] *
-                    partials[i][k];
-            }
-            *b_p = partials[i - 1][j] = dZActivation[i - 1][j] * partial;
+            *b_p = partials[network->layerCount - 2][i] =
+                (dZActivation[network->layerCount - 2][i]) * 2 *
+                (network->neurons[network->layerCount - 1][i] - groundTruth[i]);
             b_p--;
-            for (int k = network->layersSizes[i - 1] - 1; k > -1; k--)
+
+            BACK_PROPAGATION_PARALLEL_STRATEGY_1_1_2
+            for (int j = network->layersSizes[network->layerCount - 2] - 1;
+                 j > -1; j--)
             {
-                *w_p = network->neurons[i - 1][k] * partials[i - 1][j];
+                *w_p = network->neurons[network->layerCount - 2][j] *
+                       partials[network->layerCount - 2][i];
                 w_p--;
+            }
+        }
+
+        BACK_PROPAGATION_PARALLEL_STRATEGY_1_2_1
+        for (int i = network->layerCount - 2; i > 0; i--)
+        {
+            BACK_PROPAGATION_PARALLEL_STRATEGY_1_2_2
+            for (int j = network->layersSizes[i] - 1; j > -1; j--)
+            {
+                BACK_PROPAGATION_PARALLEL_STRATEGY_1_2_3
+                {
+                    float partial = 0;
+
+                    BACK_PROPAGATION_PARALLEL_STRATEGY_1_2_3_1
+                    for (int k = network->layersSizes[i + 1] - 1; k > -1; k--)
+                    {
+                        partial += network->weights[i][IDX2(
+                                       k, j, network->layersSizes[i])] *
+                                   partials[i][k];
+                    }
+
+                    *b_p = partials[i - 1][j] =
+                        dZActivation[i - 1][j] * partial;
+                    b_p--;
+
+                    BACK_PROPAGATION_PARALLEL_STRATEGY_1_2_3_1
+                    for (int k = network->layersSizes[i - 1] - 1; k > -1; k--)
+                    {
+                        *w_p = network->neurons[i - 1][k] * partials[i - 1][j];
+                        w_p--;
+                    }
+                }
             }
         }
     }

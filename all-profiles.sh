@@ -10,5 +10,5 @@ if [ ! -d .obj ]; then
 fi
 
 ./build-profile.sh profile-ff profiling/feed-forward/p0 
-./build-profile.sh profile-ff profiling/feed-forward/p1 "-DFEED_FORWARD_PARALLEL_1" 
-./build-profile.sh profile-ff profiling/feed-forward/p2 "-DFEED_FORWARD_PARALLEL_2"
+./build-profile.sh profile-ff profiling/feed-forward/p1 "-DFF_PARALLEL_1" 
+./build-profile.sh profile-ff profiling/feed-forward/p2 "-DFF_PARALLEL_2"

@@ -9,7 +9,6 @@ if [ ! -d .obj ]; then
     mkdir .obj
 fi
 
-gcc -Iinc -Isrc -c src/profiler.c -o .obj/profiler.o
 gcc -Iinc -Isrc -c src/network.c -o .obj/network.o
 gcc -Iinc -Isrc -c src/dataloader.c -o .obj/dataloader.o
 gcc -Iinc -Isrc -c src/sgd.c -o .obj/sgd.o
