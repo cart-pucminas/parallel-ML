@@ -18,6 +18,8 @@
 #define D_RELU_F(x) (x)
 #define D_SOFTMAX_F(x) (x)
 
+#define PARALLEL_STRATEGY "static parallel for in feed forward inner loop"
+
 void feedForward(NN *network, float **dActZ, ActivationFunction activation)
 {
     switch (activation)
@@ -33,6 +35,8 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+
+#pragma omp parallel for
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 float a = 1.0f / 1.0f + expf(-(l[j] + b[j]));
@@ -53,6 +57,8 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+
+#pragma omp parallel for
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)
@@ -72,6 +78,8 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+
+#pragma omp parallel for
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)
@@ -91,6 +99,8 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
+
+#pragma omp parallel for
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
                 if (dActZ != NULL)

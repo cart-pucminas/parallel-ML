@@ -2,19 +2,11 @@
 
 #include "args.h"
 #include "network.h"
-#include "sgd.h"
 #include "profiler.h"
+#include "sgd.h"
 
 int main(int argc, char **argv)
 {
-#if defined(FEED_FORWARD_PARALLEL_1)
-    printf("static feed forward parallelization\n");
-#elif defined (FEED_FORWARD_PARALLEL_2)
-    printf("dynamic feed forward parallelization\n");
-#else
-    printf("single thread feed forward\n");
-#endif
-
     Params *params = parseArgs(argc, argv);
 
     size_t *sizes = malloc((params->hiddenLayerCount + 2) * sizeof(size_t));
@@ -33,10 +25,20 @@ int main(int argc, char **argv)
     for (int i = 1; i < network->layerCount; i++)
         dActZ[i - 1] = malloc(network->layersSizes[i] * sizeof(float));
 
-    profile_start();
+    // warm-up
     feedForward(network, dActZ, SIGMOID);
-    double elapsed = profile_getElapsed();
-    printf("%.9f\n", elapsed);
+
+    double elapsedSum = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        profile_start();
+        feedForward(network, dActZ, SIGMOID);
+        double elapsed = profile_getElapsed();
+        printf("%.9f\n", elapsed);
+        elapsedSum += elapsed;
+    }
+
+    printf("%.9f\n", elapsedSum / 10);
 
     freeParams(params);
     freeNetwork(network);

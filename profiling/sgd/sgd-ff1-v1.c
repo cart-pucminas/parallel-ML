@@ -18,6 +18,8 @@
 #define D_RELU_F(x) (x)
 #define D_SOFTMAX_F(x) (x)
 
+#define PARALLEL_STRATEGY "static parallel for in feed forward outer loop"
+
 void feedForward(NN *network, float **dActZ, ActivationFunction activation)
 {
     switch (activation)
@@ -30,12 +32,13 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
                 for (int k = 0; k < cols; k++)
                     l[j] += prevL[k] * w[IDX2(j, k, cols)];
-                float a = 1.0f / 1.0f + expf(-(l[j] + b[j]));
+                float a = 1.0f / (1.0f + expf(-(l[j] + b[j])));
                 if (dActZ != NULL)
                     dActZ[i - 1][j] = a * (1.0f - a);
                 l[j] = a;
@@ -50,6 +53,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -69,6 +73,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -88,6 +93,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;

@@ -30,6 +30,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -50,6 +51,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -69,6 +71,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;
@@ -88,6 +91,7 @@ void feedForward(NN *network, float **dActZ, ActivationFunction activation)
             float *l = network->neurons[i], *prevL = network->neurons[i - 1],
                   *w = network->weights[i - 1], *b = network->biases[i - 1];
 
+#pragma omp parallel for
             for (int j = 0; j < rows; j++)
             {
                 l[j] = 0;

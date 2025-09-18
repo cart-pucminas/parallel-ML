@@ -9,9 +9,9 @@ if [ ! -d .obj ]; then
     mkdir .obj
 fi
 
-./build-profile.sh profile-ff profiling/feed-forward/p0 
-./build-profile.sh profile-ff profiling/feed-forward/p1-v1 "-DFFP_1_1=1" 
-./build-profile.sh profile-ff profiling/feed-forward/p2-v1 "-DFFP_1_2=1"
-./build-profile.sh profile-ff profiling/feed-forward/p1-v2 "-DFFP_1_1=2" 
-./build-profile.sh profile-ff profiling/feed-forward/p2-v2 "-DFFP_1_2=2"
+./build-profile.sh profile-ff src/sgd.c profiling/feed-forward/single
+./build-profile.sh profile-ff profiling/sgd/sgd-ff1-v1.c profiling/feed-forward/p1-v1 
+./build-profile.sh profile-ff profiling/sgd/sgd-ff1-v2.c profiling/feed-forward/p2-v1 
+./build-profile.sh profile-ff profiling/sgd/sgd-ff2-v1.c profiling/feed-forward/p1-v2 
+./build-profile.sh profile-ff profiling/sgd/sgd-ff2-v2.c profiling/feed-forward/p2-v2 
 
