@@ -62,7 +62,7 @@ g++ -O3 cnn-seq.cpp -o cnn-seq
 
 ## ✅ Expected Results (guide)
 
-* **oneAPI GPU** tends to outperform **oneAPI CPU** on large problems (higher parallelism and *throughput*), as long as data transfer doesn’t dominate.
+* **oneAPI CPU** tends to outperform **OpenMP CPU** on large problems (higher parallelism and *throughput*), as long as data transfer doesn’t dominate.
 * **OpenMP CPU** provides a good *baseline* and is easy to port.
 
 > Interpret *speedups* considering allocation/copy *overheads*, memory access patterns (coalescing), and parallelization policies in each variant.
