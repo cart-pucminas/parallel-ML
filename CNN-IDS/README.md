@@ -58,6 +58,7 @@ export OMP_NUM_THREADS = X
 g++ -O3 cnn-seq.cpp -o cnn-seq
 ./cnn-seq
 ---
+```
 
 ## ✅ Expected Results (guide)
 
