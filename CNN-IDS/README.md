@@ -15,7 +15,7 @@ This repository implements and compares the **CNN** algorithm running on:
 
 The comparison focuses on **execution time** and **scalability (strong)**.
 
-> ⚠️ Note: The CNN codebase is kept as unified as possible across variants, changing only the parallel primitives and *backend* details.
+> ⚠️ Note: The CNN codebase is kept as unified as possible across variants, changing only the parallel primitives details.
 
 ---
 
