@@ -71,7 +71,7 @@ g++ -O3 cnn-seq.cpp -o cnn-seq
 
 ## 📬 Contact
 
-* **Authors:** Rafael Rodrigues, Thiago Augusto – *Puc MINAS/ CArt*
+* **Authors:** Rafael Rodrigues, Thiago Augusto – *PUC Minas/ CArT*
 * **E-mail:** [rafaelroliveira2003@gmail.com](mailto:rafaelroliveira2003@gmail.com) and [thadleao@gmail.com](mailto:thadleao@gmail.com)
 
 > Suggestions and *issues* are welcome!
