@@ -102,7 +102,7 @@ LD_LIBRARY_PATH=<LLVM_PATH>/lib:$LD_LIBRARY_PATH \
 
 ## 📬 Contact
 
-* **Authors:** Laura Costa, Luiz Fernando Frassi – *Puc MINAS/ CArt*
+* **Authors:** Laura Costa, Luiz Fernando Frassi – *PUC Minas/ CArT*
 * **E-mail:** [laura.costa3141@gmail.com](mailto:laura.costa3141@gmail.com) and [luizfernandoe30@gmail.com](mailto:luizfernandoe30@gmail.com)
 
 > Suggestions and *issues* are welcome!
