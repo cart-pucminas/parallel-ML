@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> {} }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
@@ -6,6 +8,7 @@ pkgs.mkShell {
     bear
     pkg-config
     valgrind
+    linuxKernel.packages.linux_zen.perf
   ];
 
   shellHook = ''
