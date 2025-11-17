@@ -5,10 +5,7 @@
 
 static struct timespec startTime;
 
-void profile_start() 
-{ 
-    clock_gettime(CLOCK_MONOTONIC, &startTime); 
-}
+void profile_start() { clock_gettime(CLOCK_MONOTONIC, &startTime); }
 
 double profile_getElapsed()
 {

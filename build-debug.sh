@@ -2,17 +2,16 @@
 set -e
 
 if [ ! -d bin/debug ]; then
-    mkdir bin/debug
+    mkdir -p bin/debug
 fi
 
 if [ ! -d .obj ]; then
     mkdir .obj
 fi
 
-gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/network.c -o .obj/network.o
-gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/dataloader.c -o .obj/dataloader.o
-gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/sgd.c -o .obj/sgd.o
-gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/perceptron.c -o .obj/perceptron.o
-gcc -O0 -g -fsanitize=address -Iinc -Isrc -c src/main.c -o .obj/main.o
-gcc -g -fsanitize=address .obj/*.o -o bin/debug/main -lm
+gcc -Og -g -fsanitize=address -fopenmp -Iinc -Isrc -c src/profiler.c -o .obj/profiler.o
+gcc -Og -g -fsanitize=address -fopenmp -Iinc -Isrc -c src/dataloader.c -o .obj/dataloader.o
+gcc -Og -g -fsanitize=address -fopenmp -Iinc -Isrc -c src/mlp.c -o .obj/mlp.o
+gcc -Og -g -fsanitize=address -fopenmp -Iinc -Isrc -c src/main.c -o .obj/main.o
+gcc -g -fsanitize=address -fopenmp .obj/*.o -o bin/debug/main -lm
 rm .obj/main.o

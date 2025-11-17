@@ -2,6 +2,7 @@
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-fopenmp",
       "-Iinc",
       "-Isrc",
       "-c",
@@ -16,20 +17,7 @@
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
-      "-Iinc",
-      "-Isrc",
-      "-c",
-      "-o",
-      ".obj/network.o",
-      "src/network.c"
-    ],
-    "directory": "/home/mateus/repos/perceptron",
-    "file": "/home/mateus/repos/perceptron/src/network.c",
-    "output": "/home/mateus/repos/perceptron/.obj/network.o"
-  },
-  {
-    "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-fopenmp",
       "-Iinc",
       "-Isrc",
       "-c",
@@ -44,34 +32,22 @@
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-fopenmp",
       "-Iinc",
       "-Isrc",
       "-c",
       "-o",
-      ".obj/sgd.o",
-      "src/sgd.c"
+      ".obj/mlp.o",
+      "src/mlp.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
-    "file": "/home/mateus/repos/perceptron/src/sgd.c",
-    "output": "/home/mateus/repos/perceptron/.obj/sgd.o"
+    "file": "/home/mateus/repos/perceptron/src/mlp.c",
+    "output": "/home/mateus/repos/perceptron/.obj/mlp.o"
   },
   {
     "arguments": [
       "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
-      "-Iinc",
-      "-Isrc",
-      "-c",
-      "-o",
-      ".obj/perceptron.o",
-      "src/perceptron.c"
-    ],
-    "directory": "/home/mateus/repos/perceptron",
-    "file": "/home/mateus/repos/perceptron/src/perceptron.c",
-    "output": "/home/mateus/repos/perceptron/.obj/perceptron.o"
-  },
-  {
-    "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "-fopenmp",
       "-Iinc",
       "-Isrc",
       "-c",

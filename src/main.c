@@ -1,19 +1,20 @@
+#include <omp.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "args.h"
 #include "dataloader.h"
 #include "dataset.h"
-#include "perceptron.h"
+#include "mlp.h"
 
 const char grayscaleMap[] = ".:-=+*#%@";
 
 int main(int argc, char **argv)
 {
-    Params *params = parseArgs(argc, argv);
-
-    char *labels = "/home/mateus/repos/perceptron/input/test-label.idx1-ubyte",
-         *images = "/home/mateus/repos/perceptron/input/test-image.idx3-ubyte";
+    omp_set_num_threads(1);
+    char *labels =
+             "/home/mateus/repos/perceptron/input/train-labels.idx1-ubyte",
+         *images =
+             "/home/mateus/repos/perceptron/input/train-images.idx3-ubyte";
 
     Dataset *learningDataset = loadDataset(labels, images);
     if (learningDataset == NULL)
@@ -22,8 +23,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    labels = "/home/mateus/repos/perceptron/input/test-label.idx1-ubyte",
-    images = "/home/mateus/repos/perceptron/input/test-image.idx3-ubyte";
+    labels = "/home/mateus/repos/perceptron/input/t10k-labels.idx1-ubyte",
+    images = "/home/mateus/repos/perceptron/input/t10k-images.idx3-ubyte";
 
     Dataset *classificationDataset = loadDataset(labels, images);
     if (classificationDataset == NULL)
@@ -32,11 +33,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    init(params, learningDataset, classificationDataset);
+    unsigned int layers[] = {28 * 28, 256, 128, 10};
+    Network *n = constructNetwork(SIGMOID, 10, 4, layers, 0.5, 128);
+    fit(n, learningDataset);
+    classify(n, classificationDataset);
 
     freeDataset(learningDataset);
     freeDataset(classificationDataset);
-    freeParams(params);
+    freeNetwork(n);
 
     printf("all done :D\n");
     return 0;
