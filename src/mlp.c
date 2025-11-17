@@ -28,8 +28,6 @@ typedef struct
 typedef struct
 {
     float **neurons;
-    float *nablaW;
-    float *nablaB;
     float **partials;
     float **dActZ;
 } ThreadWorkspace;
@@ -274,14 +272,14 @@ void feedForward(Network *network, float **neurons, float **dActZ)
 }
 
 void backPropagation(Network *network, float *groundTruth,
-                     ThreadWorkspace *workspace)
+                     ThreadWorkspace *workspace, float *nablaW, float *nablaB)
 {
-    float *w_p = &workspace->nablaW[network->totalSynapses - 1],
-          *b_p = &workspace->nablaB[network->totalNeurons - 1];
+    float *w_p = &nablaW[network->totalSynapses - 1],
+          *b_p = &nablaB[network->totalNeurons - 1];
 
     for (int i = network->layersSizes[network->layerCount - 1] - 1; i > -1; i--)
     {
-        *b_p = workspace->partials[network->layerCount - 2][i] =
+        *b_p += workspace->partials[network->layerCount - 2][i] =
             (workspace->dActZ[network->layerCount - 2][i]) * 2 *
             (workspace->neurons[network->layerCount - 1][i] - groundTruth[i]);
         b_p--;
@@ -289,8 +287,8 @@ void backPropagation(Network *network, float *groundTruth,
         for (int j = network->layersSizes[network->layerCount - 2] - 1; j > -1;
              j--)
         {
-            *w_p = workspace->neurons[network->layerCount - 2][j] *
-                   workspace->partials[network->layerCount - 2][i];
+            *w_p += workspace->neurons[network->layerCount - 2][j] *
+                    workspace->partials[network->layerCount - 2][i];
             w_p--;
         }
     }
@@ -309,14 +307,14 @@ void backPropagation(Network *network, float *groundTruth,
                     workspace->partials[i][k];
             }
 
-            *b_p = workspace->partials[i - 1][j] =
+            *b_p += workspace->partials[i - 1][j] =
                 workspace->dActZ[i - 1][j] * partial;
             b_p--;
 
             for (int k = network->layersSizes[i - 1] - 1; k > -1; k--)
             {
-                *w_p = workspace->neurons[i - 1][k] *
-                       workspace->partials[i - 1][j];
+                *w_p += workspace->neurons[i - 1][k] *
+                        workspace->partials[i - 1][j];
                 w_p--;
             }
         }
@@ -346,8 +344,6 @@ void fit(Network *network, Dataset *dataset)
                 malloc(network->layersSizes[j] * sizeof(float));
         }
 
-        workspaces[i].nablaW = malloc(network->totalSynapses * sizeof(float));
-        workspaces[i].nablaB = malloc(network->totalNeurons * sizeof(float));
         workspaces[i].partials =
             malloc((network->layerCount - 1) * sizeof(float *));
         workspaces[i].dActZ =
@@ -393,12 +389,7 @@ void fit(Network *network, Dataset *dataset)
                             workspaces[t].dActZ);
                 backPropagation(network,
                                 batch->groundTruths[i + miniBatchStart],
-                                &workspaces[t]);
-
-                for (int k = 0; k < network->totalSynapses; k++)
-                    nablaW[k] += workspaces[t].nablaW[k];
-                for (int k = 0; k < network->totalNeurons; k++)
-                    nablaB[k] += workspaces[t].nablaB[k];
+                                &workspaces[t], nablaW, nablaB);
             }
 
             float eta = network->learningRate / (float)trueMiniSize,
@@ -409,12 +400,14 @@ void fit(Network *network, Dataset *dataset)
                 int totalW =
                     network->layersSizes[i] * network->layersSizes[i - 1];
 
+#pragma parallel for
                 for (int j = 0; j < totalW; j++)
                 {
                     network->weights[i - 1][j] -= eta * (*nW_p);
                     nW_p++;
                 }
 
+#pragma parallel for
                 for (int j = 0; j < network->layersSizes[i]; j++)
                 {
                     network->biases[i - 1][j] -= eta * (*nB_p);
@@ -423,8 +416,8 @@ void fit(Network *network, Dataset *dataset)
             }
 
             printf("Epoch %d - %d out of %ld batches\n", e + 1,
-                   miniBatchStart / network->miniBatchSize, miniCount);
-            if ((miniBatchStart + 1) < batch->size)
+                   miniBatchStart / network->miniBatchSize + 1, miniCount);
+            if (miniBatchEnd < batch->size)
                 CLRLINE;
         }
     }
@@ -433,8 +426,6 @@ void fit(Network *network, Dataset *dataset)
     free(nablaB);
     for (int i = 0; i < maxThreads; i++)
     {
-        free(workspaces[i].nablaW);
-        free(workspaces[i].nablaB);
         for (int j = 0; j < network->layerCount; j++)
         {
             free(workspaces[i].neurons[j]);
@@ -451,7 +442,7 @@ void fit(Network *network, Dataset *dataset)
     free(workspaces);
     freeBatch(batch);
 
-    printf("%lf seconds elapsed", profile_getElapsed());
+    printf("%lf seconds elapsed\n", profile_getElapsed());
 }
 
 void classify(Network *network, Dataset *dataset)

@@ -229,11 +229,17 @@ const char *dataset_getError()
     if (errorMessage)
         snprintf(message, sizeof(message), "%s", errorMessage);
     if (internalErrorMessage)
-        snprintf(message, sizeof(message), "%s: %s", message,
+    {
+        size_t len = strlen(message);
+        snprintf(message + len, sizeof(message) - len, ": %s",
                  internalErrorMessage);
+    }
     if (systemErrorMessage)
-        snprintf(message, sizeof(message), "%s (%s)", message,
+    {
+        size_t len = strlen(message);
+        snprintf(message + len, sizeof(message) - len, " (%s)",
                  systemErrorMessage);
+    }
 
     return message;
 }

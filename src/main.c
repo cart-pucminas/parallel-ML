@@ -10,7 +10,7 @@ const char grayscaleMap[] = ".:-=+*#%@";
 
 int main(int argc, char **argv)
 {
-    omp_set_num_threads(1);
+    omp_set_num_threads(4);
     char *labels =
              "/home/mateus/repos/perceptron/input/train-labels.idx1-ubyte",
          *images =
