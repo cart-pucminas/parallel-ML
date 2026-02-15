@@ -1,16 +1,26 @@
 #include "profiler.h"
-#include "bits/time.h"
 
 #include <time.h>
 
-static struct timespec startTime;
-
-void profile_start() { clock_gettime(CLOCK_MONOTONIC, &startTime); }
-
-double profile_getElapsed()
+void profile_start(Timer *timer)
 {
-    struct timespec endTime;
-    clock_gettime(CLOCK_MONOTONIC, &endTime);
-    return (endTime.tv_sec - startTime.tv_sec) +
-           (endTime.tv_nsec - startTime.tv_nsec) / 1e9;
+    clock_gettime(CLOCK_MONOTONIC, &timer->start);
+}
+
+double profile_getElapsed(Timer *timer)
+{
+    struct timespec end;
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+    double seconds = (double)(end.tv_sec - timer->start.tv_sec);
+    double nanoseconds = (double)(end.tv_nsec - timer->start.tv_nsec);
+
+    if (nanoseconds < 0)
+    {
+        seconds--;
+        nanoseconds += 1e9;
+    }
+
+    return seconds + (nanoseconds / 1e9);
 }

@@ -5,13 +5,10 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     gcc
     gdb
+    gnumake
     bear
     pkg-config
     valgrind
-    linuxKernel.packages.linux_zen.perf
+    perf
   ];
-
-  shellHook = ''
-    fish
-  '';
 }

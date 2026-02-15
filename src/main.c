@@ -1,22 +1,19 @@
 #include <omp.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "dataloader.h"
 #include "dataset.h"
 #include "mlp.h"
+#include "mnist_dataloader.h"
 
 const char grayscaleMap[] = ".:-=+*#%@";
 
-int main(int argc, char **argv)
+int main()
 {
     omp_set_num_threads(4);
-    char *labels =
-             "/home/mateus/repos/perceptron/input/train-labels.idx1-ubyte",
-         *images =
-             "/home/mateus/repos/perceptron/input/train-images.idx3-ubyte";
+    char *labels = "/input/train-labels.idx1-ubyte",
+         *images = "/input/train-images.idx3-ubyte";
 
-    Dataset *learningDataset = loadDataset(labels, images);
+    MnistDataset *learningDataset = loadDataset(labels, images);
     if (learningDataset == NULL)
     {
         printf("Dataset error: %s", dataset_getError());
@@ -26,7 +23,7 @@ int main(int argc, char **argv)
     labels = "/home/mateus/repos/perceptron/input/t10k-labels.idx1-ubyte",
     images = "/home/mateus/repos/perceptron/input/t10k-images.idx3-ubyte";
 
-    Dataset *classificationDataset = loadDataset(labels, images);
+    MnistDataset *classificationDataset = loadDataset(labels, images);
     if (classificationDataset == NULL)
     {
         printf("Dataset error: %s", dataset_getError());
@@ -35,6 +32,7 @@ int main(int argc, char **argv)
 
     unsigned int layers[] = {28 * 28, 256, 128, 10};
     Network *n = constructNetwork(SIGMOID, 10, 4, layers, 0.5, 128);
+
     fit(n, learningDataset);
     classify(n, classificationDataset);
 

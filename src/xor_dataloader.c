@@ -1,4 +1,8 @@
-#include "dataloader.h"
+#ifndef ROOT_DIR
+#define ROOT_DIR "."
+#endif
+
+#include "xor_dataloader.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -7,8 +11,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "dataset.h"
-
 #define LABEL_MAGIC 2049
 #define IMAGE_MAGIC 2051
 
@@ -16,37 +18,12 @@ const char *systemErrorMessage = NULL;
 const char *internalErrorMessage = NULL;
 const char *errorMessage = NULL;
 
-int freadBigEndian(void *restrict ptr, size_t size, size_t n,
-                   FILE *restrict stream)
+uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
 {
-    if (size == 0 || n == 0)
-        return 0;
+    char fullPath[1024];
+    (void)snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
 
-    size_t readBytes = 0;
-    uint8_t *byte = ((uint8_t *)ptr) + size - 1;
-
-    for (int i = 0; i < n; i++)
-    {
-        for (size_t j = 0; j < size; j++)
-        {
-            if (fread(byte, sizeof(uint8_t), 1, stream) != 1)
-            {
-                systemErrorMessage = strerror(errno);
-                return readBytes / size;
-            }
-
-            byte--;
-            readBytes++;
-        }
-        byte += (size * 2) - 1;
-    }
-
-    return readBytes / size;
-}
-
-uint8_t *readLabels(const char *restrict path, int *restrict size_p)
-{
-    FILE *file = fopen(path, "rb");
+    FILE *file = fopen(fullPath, "rb");
 
     if (file == NULL)
     {
@@ -55,19 +32,10 @@ uint8_t *readLabels(const char *restrict path, int *restrict size_p)
         return NULL;
     }
 
-    int magic = 1;
-
-    if (freadBigEndian(&magic, sizeof(int), 1, file) != 1 ||
-        freadBigEndian(size_p, sizeof(int), 1, file) != 1)
+    if (fread(size_p, sizeof(int), 1, file) != 1)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
-    }
-
-    if (magic != LABEL_MAGIC)
-    {
-        internalErrorMessage = "Magic number mismatch (expected 2049)";
         return NULL;
     }
 
@@ -94,33 +62,26 @@ uint8_t *readLabels(const char *restrict path, int *restrict size_p)
     return labels;
 }
 
-uint8_t **readImages(const char *restrict path, int *restrict size_p,
-                     int *restrict width_p, int *restrict height_p)
+uint8_t **readInputs(const char *restrict path, size_t *restrict size_p)
 {
-    FILE *file = fopen(path, "rb");
+    char fullPath[1024];
+    snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
+
+    FILE *file = fopen(fullPath, "rb");
 
     if (file == NULL)
     {
         systemErrorMessage = strerror(errno);
-        internalErrorMessage = "Failed to open labels file";
+        internalErrorMessage = "Failed to open inputs file";
         return NULL;
     }
 
     int magic = 1;
 
-    if (freadBigEndian(&magic, sizeof(int), 1, file) != 1 ||
-        freadBigEndian(size_p, sizeof(int), 1, file) != 1 ||
-        freadBigEndian(height_p, sizeof(int), 1, file) != 1 ||
-        freadBigEndian(width_p, sizeof(int), 1, file) != 1)
+    if (fread(size_p, sizeof(int), 1, file) != 1)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
-    }
-
-    if (magic != IMAGE_MAGIC)
-    {
-        internalErrorMessage = "Magic number mismatch (expected 2051)";
         return NULL;
     }
 
@@ -134,28 +95,26 @@ uint8_t **readImages(const char *restrict path, int *restrict size_p,
         return NULL;
     }
 
-    int pixelCount = (*width_p) * (*height_p);
-
-    for (int i = 0; i < *size_p; i++)
+    for (size_t i = 0; i < *size_p; i++)
     {
-        images[i] = malloc(pixelCount * sizeof(uint8_t));
+        images[i] = malloc(2 * sizeof(uint8_t));
 
         if (images[i] == NULL)
         {
             systemErrorMessage = strerror(errno);
             internalErrorMessage = "Memory allocation error";
             fclose(file);
-            for (int j = 0; j < i; j++)
+            for (size_t j = 0; j < i; j++)
                 free(images[j]);
             free(images);
             return NULL;
         }
 
-        if (fread(images[i], sizeof(uint8_t), pixelCount, file) != pixelCount)
+        if (fread(images[i], sizeof(uint8_t), 2, file) != 2)
         {
             internalErrorMessage = "Failed to read file";
             fclose(file);
-            for (int j = 0; j < i; j++)
+            for (size_t j = 0; j < i; j++)
                 free(images[j]);
             free(images);
             return NULL;
@@ -167,10 +126,10 @@ uint8_t **readImages(const char *restrict path, int *restrict size_p,
     return images;
 }
 
-Dataset *loadDataset(const char *restrict labelsPath,
-                     const char *restrict imagesPath)
+XorDataset *loadDataset(const char *restrict labelsPath,
+                        const char *restrict imagesPath)
 {
-    int labelsSize = 0, imagesSize = 0, imageWidth = 0, imageHeight = 0;
+    size_t labelsSize = 0, inputsSize = 0;
 
     uint8_t *labels = readLabels(labelsPath, &labelsSize);
     if (labels == NULL)
@@ -179,43 +138,40 @@ Dataset *loadDataset(const char *restrict labelsPath,
         return NULL;
     }
 
-    uint8_t **images =
-        readImages(imagesPath, &imagesSize, &imageWidth, &imageHeight);
-    if (images == NULL)
+    uint8_t **inputs = readInputs(imagesPath, &inputsSize);
+    if (inputs == NULL)
     {
-        errorMessage = "Could not read images";
+        errorMessage = "Could not read inputs";
         return NULL;
         free(labels);
     }
 
-    if (labelsSize != imagesSize)
+    if (labelsSize != inputsSize)
     {
-        errorMessage = "Label and image count are not the same";
+        errorMessage = "Label and input count are not the same";
         return NULL;
         free(labels);
-        for (int i = 0; i < imagesSize; i++)
-            free(images[i]);
-        free(images);
+        for (size_t i = 0; i < inputsSize; i++)
+            free(inputs[i]);
+        free(inputs);
     }
 
-    Dataset *dataset = malloc(sizeof(Dataset));
+    XorDataset *dataset = malloc(sizeof(XorDataset));
     dataset->labels = labels;
-    dataset->images = images;
+    dataset->inputs = inputs;
     dataset->size = labelsSize;
-    dataset->imageWidth = imageWidth;
-    dataset->imageHeight = imageHeight;
 
     return dataset;
 }
 
-int freeDataset(Dataset *dataset)
+int freeDataset(XorDataset *dataset)
 {
-    for (int i = 0; i < dataset->size; i++)
+    for (size_t i = 0; i < dataset->size; i++)
     {
-        free(dataset->images[i]);
+        free(dataset->inputs[i]);
     }
 
-    free(dataset->images);
+    free(dataset->inputs);
     free(dataset->labels);
     free(dataset);
 

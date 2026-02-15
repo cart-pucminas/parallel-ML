@@ -48,7 +48,7 @@ Network *constructNetwork(ActivationFunction activation, int epochs,
     network->learningRate = learningRate;
     network->miniBatchSize = miniBatchSize;
 
-    for (int l = 0; l < layerCount; l++)
+    for (unsigned int l = 0; l < layerCount; l++)
     {
         network->layersSizes[l] = layersSizes[l];
         network->totalNeurons += layersSizes[l];
@@ -63,10 +63,10 @@ Network *constructNetwork(ActivationFunction activation, int epochs,
             network->totalSynapses += weights;
             network->weights[l - 1] = malloc(weights * sizeof(float));
 
-            for (int n = 0; n < layersSizes[l]; n++)
+            for (unsigned int n = 0; n < layersSizes[l]; n++)
             {
-                for (int prevN = 0; prevN < network->layersSizes[l - 1];
-                     prevN++)
+                for (unsigned int prevN = 0;
+                     prevN < network->layersSizes[l - 1]; prevN++)
                 {
                     float d = (float)(rand());
                     while (d == 0)
@@ -84,7 +84,7 @@ Network *constructNetwork(ActivationFunction activation, int epochs,
 
 void freeNetwork(Network *network)
 {
-    for (int i = 1; i < network->layerCount; i++)
+    for (unsigned int i = 1; i < network->layerCount; i++)
     {
         free(network->weights[i - 1]);
         free(network->biases[i - 1]);
@@ -149,14 +149,14 @@ int persistNetwowrk(Network *network, const char *path)
 
     fwrite(&network->learningRate, sizeof(float), 1, file);
     fwrite(&network->layerCount, sizeof(size_t), 1, file);
-    for (int i = 0; i < network->layerCount; i++)
+    for (unsigned int i = 0; i < network->layerCount; i++)
     {
         fwrite(&network->layersSizes[i], sizeof(size_t), 1, file);
     }
-    for (int i = 1; i < network->layerCount; i++)
+    for (unsigned int i = 1; i < network->layerCount; i++)
         fwrite(network->biases[i], sizeof(float), network->layersSizes[i],
                file);
-    for (int i = 1; i < network->layerCount; i++)
+    for (unsigned int i = 1; i < network->layerCount; i++)
         fwrite(network->weights[i], sizeof(float),
                network->layersSizes[i] * network->layersSizes[i - 1], file);
 
@@ -164,17 +164,18 @@ int persistNetwowrk(Network *network, const char *path)
     return 1;
 }
 
-Batch *toBatch(Dataset *dataset, size_t miniBatchSize)
+Batch *toBatch(Dataset *dataset)
 {
     Batch *batch = malloc(sizeof(Batch));
     batch->size = dataset->size;
     batch->inputs = malloc(dataset->size * sizeof(float *));
     batch->groundTruths = malloc(dataset->size * sizeof(float *));
-    for (int i = 0; i < dataset->size; i++)
+    for (unsigned int i = 0; i < dataset->size; i++)
     {
         batch->inputs[i] =
             malloc(dataset->imageWidth * dataset->imageHeight * sizeof(float));
-        for (int j = 0; j < dataset->imageWidth * dataset->imageHeight; j++)
+        for (unsigned int j = 0; j < dataset->imageWidth * dataset->imageHeight;
+             j++)
             batch->inputs[i][j] = dataset->images[i][j] / 255.0f;
 
         batch->groundTruths[i] = malloc(10 * sizeof(float));
@@ -186,7 +187,7 @@ Batch *toBatch(Dataset *dataset, size_t miniBatchSize)
 
 void freeBatch(Batch *batch)
 {
-    for (int i = 0; i < batch->size; i++)
+    for (size_t i = 0; i < batch->size; i++)
     {
         free(batch->inputs[i]);
         free(batch->groundTruths[i]);
@@ -198,76 +199,28 @@ void freeBatch(Batch *batch)
 
 void feedForward(Network *network, float **neurons, float **dActZ)
 {
-    switch (network->activation)
+    for (unsigned int i = 1; i < network->layerCount; i++)
     {
-    case SIGMOID:
-        for (int i = 1; i < network->layerCount; i++)
-        {
-            int rows = network->layersSizes[i],
-                cols = network->layersSizes[i - 1];
-            float *l = neurons[i], *prevL = neurons[i - 1],
-                  *w = network->weights[i - 1], *b = network->biases[i - 1];
+        int rows = network->layersSizes[i], cols = network->layersSizes[i - 1];
+        float *l = neurons[i], *prevL = neurons[i - 1],
+              *w = network->weights[i - 1], *b = network->biases[i - 1];
 
-            for (int j = 0; j < rows; j++)
-            {
-                float z = 0;
+        for (int j = 0; j < rows; j++)
+        {
+            float z = 0;
 
 #pragma omp simd reduction(+ : z)
-                for (int k = 0; k < cols; k++)
-                    z += prevL[k] * w[IDX2(j, k, cols)];
+            for (int k = 0; k < cols; k++)
+                z += prevL[k] * w[IDX2(j, k, cols)];
 
-                z += b[j];
-                float a = 1.0f / (1.0f + expf(-z));
+            z += b[j];
+            float a = 1.0f / (1.0f + expf(-z));
 
-                if (dActZ != NULL)
-                    dActZ[i - 1][j] = a * (1.0f - a);
+            if (dActZ != NULL)
+                dActZ[i - 1][j] = a * (1.0f - a);
 
-                l[j] = a;
-            }
+            l[j] = a;
         }
-        break;
-    case TANH:
-        for (int i = 1; i < network->layerCount; i++)
-        {
-            int rows = network->layersSizes[i],
-                cols = network->layersSizes[i - 1];
-            float *l = neurons[i], *prevL = neurons[i - 1],
-                  *w = network->weights[i - 1], *b = network->biases[i - 1];
-
-            for (int j = 0; j < rows; j++)
-            {
-                l[j] = 0;
-                for (int k = 0; k < cols; k++)
-                    l[j] += prevL[k] * w[IDX2(j, k, cols)];
-
-                if (dActZ != NULL)
-                    dActZ[i - 1][j] = D_TANH_F(l[j] + b[j]);
-
-                l[j] = TANH_F(l[j] + b[j]);
-            }
-        }
-        break;
-    case RELU:
-        for (int i = 1; i < network->layerCount; i++)
-        {
-            int rows = network->layersSizes[i],
-                cols = network->layersSizes[i - 1];
-            float *l = neurons[i], *prevL = neurons[i - 1],
-                  *w = network->weights[i - 1], *b = network->biases[i - 1];
-
-            for (int j = 0; j < rows; j++)
-            {
-                l[j] = 0;
-                for (int k = 0; k < cols; k++)
-                    l[j] += prevL[k] * w[IDX2(j, k, cols)];
-
-                if (dActZ != NULL)
-                    dActZ[i - 1][j] = D_RELU_F(l[j] + b[j]);
-
-                l[j] = RELU_F(l[j] + b[j]);
-            }
-        }
-        break;
     }
 }
 
@@ -323,9 +276,11 @@ void backPropagation(Network *network, float *groundTruth,
 
 void fit(Network *network, Dataset *dataset)
 {
-    profile_start();
+    Timer timer;
 
-    Batch *batch = toBatch(dataset, network->miniBatchSize);
+    profile_start(&timer);
+
+    Batch *batch = toBatch(dataset);
 
     int maxThreads = omp_get_max_threads();
 
@@ -338,7 +293,7 @@ void fit(Network *network, Dataset *dataset)
     {
         workspaces[i].neurons = malloc(network->layerCount * sizeof(float *));
 
-        for (int j = 0; j < network->layerCount; j++)
+        for (unsigned int j = 0; j < network->layerCount; j++)
         {
             workspaces[i].neurons[j] =
                 malloc(network->layersSizes[j] * sizeof(float));
@@ -349,7 +304,7 @@ void fit(Network *network, Dataset *dataset)
         workspaces[i].dActZ =
             malloc((network->layerCount - 1) * sizeof(float *));
 
-        for (int j = 1; j < network->layerCount; j++)
+        for (unsigned int j = 1; j < network->layerCount; j++)
         {
             workspaces[i].partials[j - 1] =
                 malloc(network->layersSizes[j] * sizeof(float));
@@ -361,7 +316,7 @@ void fit(Network *network, Dataset *dataset)
     size_t miniCount = batch->size / network->miniBatchSize + 1;
     for (int e = 0; e < network->epochs; e++)
     {
-        for (int miniBatchStart = 0; miniBatchStart < batch->size;
+        for (unsigned int miniBatchStart = 0; miniBatchStart < batch->size;
              miniBatchStart += network->miniBatchSize)
         {
             memset(nablaW, 0, network->totalSynapses * sizeof(float));
@@ -381,7 +336,7 @@ void fit(Network *network, Dataset *dataset)
             {
                 int t = omp_get_thread_num();
 
-                for (int j = 0; j < network->layersSizes[0]; j++)
+                for (unsigned int j = 0; j < network->layersSizes[0]; j++)
                     workspaces[t].neurons[0][j] =
                         batch->inputs[i + miniBatchStart][j];
 
@@ -395,20 +350,20 @@ void fit(Network *network, Dataset *dataset)
             float eta = network->learningRate / (float)trueMiniSize,
                   *nW_p = nablaW, *nB_p = nablaB;
 
-            for (int i = 1; i < network->layerCount; i++)
+            for (unsigned int i = 1; i < network->layerCount; i++)
             {
                 int totalW =
                     network->layersSizes[i] * network->layersSizes[i - 1];
 
-#pragma parallel for
+#pragma omp parallel for
                 for (int j = 0; j < totalW; j++)
                 {
                     network->weights[i - 1][j] -= eta * (*nW_p);
                     nW_p++;
                 }
 
-#pragma parallel for
-                for (int j = 0; j < network->layersSizes[i]; j++)
+#pragma omp parallel for
+                for (unsigned int j = 0; j < network->layersSizes[i]; j++)
                 {
                     network->biases[i - 1][j] -= eta * (*nB_p);
                     nB_p++;
@@ -426,7 +381,7 @@ void fit(Network *network, Dataset *dataset)
     free(nablaB);
     for (int i = 0; i < maxThreads; i++)
     {
-        for (int j = 0; j < network->layerCount; j++)
+        for (unsigned int j = 0; j < network->layerCount; j++)
         {
             free(workspaces[i].neurons[j]);
             if (j > 0)
@@ -442,21 +397,21 @@ void fit(Network *network, Dataset *dataset)
     free(workspaces);
     freeBatch(batch);
 
-    printf("%lf seconds elapsed\n", profile_getElapsed());
+    printf("%lf seconds elapsed\n", profile_getElapsed(&timer));
 }
 
 void classify(Network *network, Dataset *dataset)
 {
     float **neurons = malloc(network->layerCount * sizeof(float *));
-    for (int i = 0; i < network->layerCount; i++)
+    for (unsigned int i = 0; i < network->layerCount; i++)
         neurons[i] = malloc(network->layersSizes[i] * sizeof(float));
 
-    Batch *batch = toBatch(dataset, network->miniBatchSize);
+    Batch *batch = toBatch(dataset);
 
     size_t hits = 0;
     for (size_t i = 0; i < batch->size; i++)
     {
-        for (int j = 0; j < network->layersSizes[0]; j++)
+        for (unsigned int j = 0; j < network->layersSizes[0]; j++)
             neurons[0][j] = batch->inputs[i][j];
 
         feedForward(network, neurons, NULL);
@@ -483,7 +438,7 @@ void classify(Network *network, Dataset *dataset)
            ((float)hits / batch->size) * 100.0f);
 
     freeBatch(batch);
-    for (int i = 0; i < network->layerCount; i++)
+    for (unsigned int i = 0; i < network->layerCount; i++)
         free(neurons[i]);
     free(neurons);
 }
