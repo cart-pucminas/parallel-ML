@@ -1,7 +1,3 @@
-#ifndef ROOT_DIR
-#define ROOT_DIR "."
-#endif
-
 #include "mnist_dataloader.h"
 
 #include <errno.h>
@@ -14,12 +10,12 @@
 #define LABEL_MAGIC 2049
 #define IMAGE_MAGIC 2051
 
-const char *systemErrorMessage = NULL;
-const char *internalErrorMessage = NULL;
-const char *errorMessage = NULL;
+static const char *systemErrorMessage = NULL;
+static const char *internalErrorMessage = NULL;
+static const char *errorMessage = NULL;
 
-int freadBigEndian(void *restrict ptr, size_t size, size_t n,
-                   FILE *restrict stream)
+static int freadBigEndian(void *restrict ptr, size_t size, size_t n,
+                          FILE *restrict stream)
 {
     if (size == 0 || n == 0)
         return 0;
@@ -46,7 +42,8 @@ int freadBigEndian(void *restrict ptr, size_t size, size_t n,
     return readBytes / size;
 }
 
-uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
+static int readLabels(uint8_t **labels, const char *restrict path,
+                      size_t *restrict size_p)
 {
     char fullPath[1024];
     (void)snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
@@ -57,7 +54,7 @@ uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Failed to open file";
-        return NULL;
+        return 0;
     }
 
     int magic = 1;
@@ -67,40 +64,43 @@ uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
     if (magic != LABEL_MAGIC)
     {
         internalErrorMessage = "Magic number mismatch (expected 2049)";
-        return NULL;
+        return 0;
     }
 
-    uint8_t *labels = malloc(*size_p * sizeof(uint8_t));
+    uint8_t *l = malloc(*size_p * sizeof(uint8_t));
 
-    if (labels == NULL)
+    if (l == NULL)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Memory allocation error";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
-    if (fread(labels, sizeof(uint8_t), *size_p, file) != *size_p)
+    if (fread(l, sizeof(uint8_t), *size_p, file) != *size_p)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        free(labels);
-        return NULL;
+        free(l);
+        return 0;
     }
+
+    *labels = l;
 
     fclose(file);
 
-    return labels;
+    return 1;
 }
 
-uint8_t **readImages(const char *restrict path, size_t *restrict size_p,
-                     size_t *restrict width_p, size_t *restrict height_p)
+static int readImages(uint8_t ***images, const char *restrict path,
+                      size_t *restrict size_p, size_t *restrict width_p,
+                      size_t *restrict height_p)
 {
     char fullPath[1024];
     snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
@@ -111,7 +111,7 @@ uint8_t **readImages(const char *restrict path, size_t *restrict size_p,
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Failed to open labels file";
-        return NULL;
+        return 0;
     }
 
     int magic = 1;
@@ -123,114 +123,121 @@ uint8_t **readImages(const char *restrict path, size_t *restrict size_p,
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
     if (magic != IMAGE_MAGIC)
     {
         internalErrorMessage = "Magic number mismatch (expected 2051)";
-        return NULL;
+        return 0;
     }
 
-    uint8_t **images = malloc(*size_p * sizeof(uint8_t *));
+    uint8_t **imgs = malloc(*size_p * sizeof(uint8_t *));
 
-    if (images == NULL)
+    if (imgs == NULL)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Memory allocation error";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
     size_t pixelCount = (*width_p) * (*height_p);
 
     for (size_t i = 0; i < *size_p; i++)
     {
-        images[i] = malloc(pixelCount * sizeof(uint8_t));
+        imgs[i] = malloc(pixelCount * sizeof(uint8_t));
 
-        if (images[i] == NULL)
+        if (imgs[i] == NULL)
         {
             systemErrorMessage = strerror(errno);
             internalErrorMessage = "Memory allocation error";
             fclose(file);
             for (size_t j = 0; j < i; j++)
-                free(images[j]);
-            free(images);
-            return NULL;
+                free(imgs[j]);
+            free(imgs);
+            return 0;
         }
 
-        if (fread(images[i], sizeof(uint8_t), pixelCount, file) != pixelCount)
+        if (fread(imgs[i], sizeof(uint8_t), pixelCount, file) != pixelCount)
         {
             internalErrorMessage = "Failed to read file";
             fclose(file);
             for (size_t j = 0; j < i; j++)
-                free(images[j]);
-            free(images);
-            return NULL;
+                free(imgs[j]);
+            free(imgs);
+            return 0;
         }
     }
 
+    *images = imgs;
+
     fclose(file);
 
-    return images;
+    return 1;
 }
 
-MnistDataset *loadDataset(const char *restrict labelsPath,
-                          const char *restrict imagesPath)
+int mnist_loadDataset(Dataset **dataset, const char *restrict labelsPath,
+                      const char *restrict imagesPath)
 {
     size_t labelsSize = 0, imagesSize = 0, imageWidth = 0, imageHeight = 0;
 
-    uint8_t *labels = readLabels(labelsPath, &labelsSize);
-    if (labels == NULL)
+    uint8_t *labels = NULL;
+    if (!readLabels(&labels, labelsPath, &labelsSize))
     {
         errorMessage = "Could not read labels";
-        return NULL;
+        return 0;
     }
 
-    uint8_t **images =
-        readImages(imagesPath, &imagesSize, &imageWidth, &imageHeight);
-    if (images == NULL)
+    uint8_t **images = NULL;
+    if (!readImages(&images, imagesPath, &imagesSize, &imageWidth,
+                    &imageHeight))
     {
         errorMessage = "Could not read images";
-        return NULL;
         free(labels);
+        return 0;
     }
 
     if (labelsSize != imagesSize)
     {
         errorMessage = "Label and image count are not the same";
-        return NULL;
         free(labels);
         for (size_t i = 0; i < imagesSize; i++)
             free(images[i]);
         free(images);
+        return 0;
     }
 
-    MnistDataset *dataset = malloc(sizeof(MnistDataset));
-    dataset->labels = labels;
-    dataset->images = images;
-    dataset->size = labelsSize;
-    dataset->imageWidth = imageWidth;
-    dataset->imageHeight = imageHeight;
+    Dataset *d = malloc(sizeof(Dataset));
+    d->size = labelsSize;
 
-    return dataset;
-}
+    d->inputs = malloc(labelsSize * sizeof(float *));
+    d->groundTruths = malloc(labelsSize * sizeof(float *));
 
-int freeDataset(MnistDataset *dataset)
-{
-    for (size_t i = 0; i < dataset->size; i++)
+    for (unsigned int i = 0; i < labelsSize; i++)
     {
-        free(dataset->images[i]);
+        d->inputs[i] = malloc(imageWidth * imageHeight * sizeof(float));
+
+        for (unsigned int j = 0; j < imageWidth * imageHeight; j++)
+            d->inputs[i][j] = images[i][j] / 255.0f;
+
+        d->groundTruths[i] = malloc(10 * sizeof(float));
+
+        for (int j = 0; j < 10; j++)
+            d->groundTruths[i][j] = (float)(j == labels[i]);
     }
 
-    free(dataset->images);
-    free(dataset->labels);
-    free(dataset);
+    *dataset = d;
+
+    free(labels);
+    for (size_t i = 0; i < imagesSize; i++)
+        free(images[i]);
+    free(images);
 
     return 1;
 }
 
-const char *dataset_getError()
+const char *mnist_dataset_getError()
 {
     static char message[512];
 

@@ -1,7 +1,12 @@
 [
   {
     "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "/nix/store/ag7fc58qzff4j1sgd7v98irhcr6vcg8v-gcc-wrapper-14.3.0/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fopenmp",
+      "-DROOT_DIR=\"/home/mateus/repos/perceptron\"",
+      "-O3",
       "-fopenmp",
       "-Iinc",
       "-Isrc",
@@ -16,22 +21,52 @@
   },
   {
     "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "/nix/store/ag7fc58qzff4j1sgd7v98irhcr6vcg8v-gcc-wrapper-14.3.0/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fopenmp",
+      "-DROOT_DIR=\"/home/mateus/repos/perceptron\"",
+      "-O3",
       "-fopenmp",
       "-Iinc",
       "-Isrc",
       "-c",
       "-o",
-      ".obj/dataloader.o",
-      "src/dataloader.c"
+      ".obj/mnist_dataloader.o",
+      "src/mnist_dataloader.c"
     ],
     "directory": "/home/mateus/repos/perceptron",
-    "file": "/home/mateus/repos/perceptron/src/dataloader.c",
-    "output": "/home/mateus/repos/perceptron/.obj/dataloader.o"
+    "file": "/home/mateus/repos/perceptron/src/mnist_dataloader.c",
+    "output": "/home/mateus/repos/perceptron/.obj/mnist_dataloader.o"
   },
   {
     "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "/nix/store/ag7fc58qzff4j1sgd7v98irhcr6vcg8v-gcc-wrapper-14.3.0/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fopenmp",
+      "-DROOT_DIR=\"/home/mateus/repos/perceptron\"",
+      "-O3",
+      "-fopenmp",
+      "-Iinc",
+      "-Isrc",
+      "-c",
+      "-o",
+      ".obj/xor_dataloader.o",
+      "src/xor_dataloader.c"
+    ],
+    "directory": "/home/mateus/repos/perceptron",
+    "file": "/home/mateus/repos/perceptron/src/xor_dataloader.c",
+    "output": "/home/mateus/repos/perceptron/.obj/xor_dataloader.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/ag7fc58qzff4j1sgd7v98irhcr6vcg8v-gcc-wrapper-14.3.0/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fopenmp",
+      "-DROOT_DIR=\"/home/mateus/repos/perceptron\"",
+      "-O3",
       "-fopenmp",
       "-Iinc",
       "-Isrc",
@@ -46,7 +81,12 @@
   },
   {
     "arguments": [
-      "/nix/store/f0m6caffiykyvsjim9376a3hx2yj2ghj-gcc-wrapper-14.2.1.20250322/bin/gcc",
+      "/nix/store/ag7fc58qzff4j1sgd7v98irhcr6vcg8v-gcc-wrapper-14.3.0/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-fopenmp",
+      "-DROOT_DIR=\"/home/mateus/repos/perceptron\"",
+      "-O3",
       "-fopenmp",
       "-Iinc",
       "-Isrc",

@@ -1,8 +1,6 @@
-#ifndef ROOT_DIR
-#define ROOT_DIR "."
-#endif
 
 #include "xor_dataloader.h"
+#include "mlp.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -11,14 +9,12 @@
 #include <string.h>
 #include <time.h>
 
-#define LABEL_MAGIC 2049
-#define IMAGE_MAGIC 2051
+static const char *systemErrorMessage = NULL;
+static const char *internalErrorMessage = NULL;
+static const char *errorMessage = NULL;
 
-const char *systemErrorMessage = NULL;
-const char *internalErrorMessage = NULL;
-const char *errorMessage = NULL;
-
-uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
+static int readLabels(uint8_t **labels, const char *restrict path,
+                      size_t *restrict size_p)
 {
     char fullPath[1024];
     (void)snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
@@ -29,40 +25,43 @@ uint8_t *readLabels(const char *restrict path, size_t *restrict size_p)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Failed to open file";
-        return NULL;
+        return 0;
     }
 
     if (fread(size_p, sizeof(int), 1, file) != 1)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
-    uint8_t *labels = malloc(*size_p * sizeof(uint8_t));
+    uint8_t *l = malloc(*size_p * sizeof(uint8_t));
 
-    if (labels == NULL)
+    if (l == NULL)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Memory allocation error";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
-    if (fread(labels, sizeof(uint8_t), *size_p, file) != *size_p)
+    if (fread(l, sizeof(uint8_t), *size_p, file) != *size_p)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
         free(labels);
-        return NULL;
+        return 0;
     }
+
+    *labels = l;
 
     fclose(file);
 
-    return labels;
+    return 1;
 }
 
-uint8_t **readInputs(const char *restrict path, size_t *restrict size_p)
+static int readInputs(uint8_t ***inputs, const char *restrict path,
+                      size_t *restrict size_p)
 {
     char fullPath[1024];
     snprintf(fullPath, sizeof(fullPath), "%s/%s", ROOT_DIR, path);
@@ -73,112 +72,119 @@ uint8_t **readInputs(const char *restrict path, size_t *restrict size_p)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Failed to open inputs file";
-        return NULL;
+        return 0;
     }
-
-    int magic = 1;
 
     if (fread(size_p, sizeof(int), 1, file) != 1)
     {
         internalErrorMessage = "Failed to read file";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
-    uint8_t **images = malloc(*size_p * sizeof(uint8_t *));
+    uint8_t **in = malloc(*size_p * sizeof(uint8_t *));
 
-    if (images == NULL)
+    if (in == NULL)
     {
         systemErrorMessage = strerror(errno);
         internalErrorMessage = "Memory allocation error";
         fclose(file);
-        return NULL;
+        return 0;
     }
 
     for (size_t i = 0; i < *size_p; i++)
     {
-        images[i] = malloc(2 * sizeof(uint8_t));
+        in[i] = malloc(2 * sizeof(uint8_t));
 
-        if (images[i] == NULL)
+        if (in[i] == NULL)
         {
             systemErrorMessage = strerror(errno);
             internalErrorMessage = "Memory allocation error";
             fclose(file);
             for (size_t j = 0; j < i; j++)
-                free(images[j]);
-            free(images);
-            return NULL;
+                free(in[j]);
+            free(in);
+            return 0;
         }
 
-        if (fread(images[i], sizeof(uint8_t), 2, file) != 2)
+        if (fread(in[i], sizeof(uint8_t), 2, file) != 2)
         {
             internalErrorMessage = "Failed to read file";
             fclose(file);
             for (size_t j = 0; j < i; j++)
-                free(images[j]);
-            free(images);
-            return NULL;
+                free(in[j]);
+            free(in);
+            return 0;
         }
     }
 
+    *inputs = in;
+
     fclose(file);
 
-    return images;
+    return 1;
 }
 
-XorDataset *loadDataset(const char *restrict labelsPath,
-                        const char *restrict imagesPath)
+int xor_loadDataset(Dataset **dataset, const char *restrict labelsPath,
+                    const char *restrict inputsPath)
 {
     size_t labelsSize = 0, inputsSize = 0;
 
-    uint8_t *labels = readLabels(labelsPath, &labelsSize);
-    if (labels == NULL)
+    uint8_t *labels = NULL;
+
+    if (!readLabels(&labels, labelsPath, &labelsSize))
     {
         errorMessage = "Could not read labels";
-        return NULL;
+        return 0;
     }
 
-    uint8_t **inputs = readInputs(imagesPath, &inputsSize);
-    if (inputs == NULL)
+    uint8_t **inputs = NULL;
+
+    if (!readInputs(&inputs, inputsPath, &inputsSize))
     {
         errorMessage = "Could not read inputs";
-        return NULL;
         free(labels);
+        return 0;
     }
 
     if (labelsSize != inputsSize)
     {
         errorMessage = "Label and input count are not the same";
-        return NULL;
         free(labels);
         for (size_t i = 0; i < inputsSize; i++)
             free(inputs[i]);
         free(inputs);
+        return 0;
     }
 
-    XorDataset *dataset = malloc(sizeof(XorDataset));
-    dataset->labels = labels;
-    dataset->inputs = inputs;
-    dataset->size = labelsSize;
+    Dataset *d = malloc(sizeof(Dataset));
 
-    return dataset;
-}
+    d->size = labelsSize;
 
-int freeDataset(XorDataset *dataset)
-{
-    for (size_t i = 0; i < dataset->size; i++)
+    d->groundTruths = malloc(labelsSize * sizeof(float *));
+    d->inputs = malloc(labelsSize * sizeof(float *));
+
+    for (size_t i = 0; i < labelsSize; i++)
     {
-        free(dataset->inputs[i]);
+        d->groundTruths[i] = malloc(1 * sizeof(float));
+        d->groundTruths[i][0] = (float)labels[0];
+
+        d->inputs[i] = malloc(2 * sizeof(float));
+        d->inputs[i][0] = inputs[i][0];
+        d->inputs[i][1] = inputs[i][1];
     }
 
-    free(dataset->inputs);
-    free(dataset->labels);
-    free(dataset);
+    *dataset = d;
+
+    free(labels);
+    for (size_t i = 0; i < inputsSize; i++)
+        free(inputs[i]);
+    free(inputs);
 
     return 1;
 }
 
-const char *dataset_getError()
+const char *xor_dataset_getError()
 {
     static char message[512];
 

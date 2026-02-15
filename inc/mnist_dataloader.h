@@ -1,22 +1,11 @@
-#ifndef DATALOADER_H
-#define DATALOADER_H
+#ifndef MNIST_DATALOADER_H
+#define MNIST_DATALOADER_H
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <mlp.h>
 
-typedef struct
-{
-    uint8_t *labels;
-    uint8_t **images;
-    size_t size;
-    size_t imageWidth;
-    size_t imageHeight;
-} MnistDataset;
+int mnist_loadDataset(Dataset **dataset, const char *labelPath,
+                      const char *imagesPath);
 
-MnistDataset *loadDataset(const char *labelPath, const char *imagesPath);
-
-int freeDataset(MnistDataset *dataset);
-
-const char *dataset_getError(void);
+const char *mnist_dataset_getError(void);
 
 #endif

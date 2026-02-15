@@ -10,5 +10,6 @@ pkgs.mkShell {
     pkg-config
     valgrind
     perf
+    python3
   ];
 }

@@ -1,20 +1,11 @@
-#ifndef DATALOADER_H
-#define DATALOADER_H
+#ifndef XOR_DATALOADER_H
+#define XOR_DATALOADER_H
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "mlp.h"
 
-typedef struct
-{
-    uint8_t *labels;
-    uint8_t **inputs;
-    size_t size;
-} XorDataset;
+int xor_loadDataset(Dataset **dataset, const char *labelPath,
+                    const char *inputPath);
 
-XorDataset *loadDataset(const char *labelPath, const char *inputPath);
-
-int freeDataset(XorDataset *dataset);
-
-const char *dataset_getError(void);
+const char *xor_dataset_getError(void);
 
 #endif

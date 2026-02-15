@@ -20,26 +20,18 @@
 
 typedef struct
 {
-    float **inputs;
-    float **groundTruths;
-    size_t size;
-} Batch;
-
-typedef struct
-{
     float **neurons;
     float **partials;
     float **dActZ;
 } ThreadWorkspace;
 
-Network *constructNetwork(ActivationFunction activation, int epochs,
-                          unsigned int layerCount, unsigned int *layersSizes,
-                          float learningRate, unsigned int miniBatchSize)
+Network *constructNetwork(int epochs, unsigned int layerCount,
+                          unsigned int *layersSizes, float learningRate,
+                          unsigned int miniBatchSize)
 {
     srand(time(NULL));
 
     Network *network = calloc(1, sizeof(Network));
-    network->activation = activation;
     network->epochs = epochs;
     network->layerCount = layerCount;
     network->layersSizes = malloc(layerCount * sizeof(size_t));
@@ -164,39 +156,6 @@ int persistNetwowrk(Network *network, const char *path)
     return 1;
 }
 
-Batch *toBatch(Dataset *dataset)
-{
-    Batch *batch = malloc(sizeof(Batch));
-    batch->size = dataset->size;
-    batch->inputs = malloc(dataset->size * sizeof(float *));
-    batch->groundTruths = malloc(dataset->size * sizeof(float *));
-    for (unsigned int i = 0; i < dataset->size; i++)
-    {
-        batch->inputs[i] =
-            malloc(dataset->imageWidth * dataset->imageHeight * sizeof(float));
-        for (unsigned int j = 0; j < dataset->imageWidth * dataset->imageHeight;
-             j++)
-            batch->inputs[i][j] = dataset->images[i][j] / 255.0f;
-
-        batch->groundTruths[i] = malloc(10 * sizeof(float));
-        for (int j = 0; j < 10; j++)
-            batch->groundTruths[i][j] = (float)(j == dataset->labels[i]);
-    }
-    return batch;
-}
-
-void freeBatch(Batch *batch)
-{
-    for (size_t i = 0; i < batch->size; i++)
-    {
-        free(batch->inputs[i]);
-        free(batch->groundTruths[i]);
-    }
-    free(batch->inputs);
-    free(batch->groundTruths);
-    free(batch);
-}
-
 void feedForward(Network *network, float **neurons, float **dActZ)
 {
     for (unsigned int i = 1; i < network->layerCount; i++)
@@ -280,8 +239,6 @@ void fit(Network *network, Dataset *dataset)
 
     profile_start(&timer);
 
-    Batch *batch = toBatch(dataset);
-
     int maxThreads = omp_get_max_threads();
 
     float *nablaW = malloc(network->totalSynapses * sizeof(float));
@@ -313,18 +270,18 @@ void fit(Network *network, Dataset *dataset)
         }
     }
 
-    size_t miniCount = batch->size / network->miniBatchSize + 1;
+    size_t miniCount = dataset->size / network->miniBatchSize + 1;
     for (int e = 0; e < network->epochs; e++)
     {
-        for (unsigned int miniBatchStart = 0; miniBatchStart < batch->size;
+        for (unsigned int miniBatchStart = 0; miniBatchStart < dataset->size;
              miniBatchStart += network->miniBatchSize)
         {
             memset(nablaW, 0, network->totalSynapses * sizeof(float));
             memset(nablaB, 0, network->totalNeurons * sizeof(float));
 
             size_t miniBatchEnd = miniBatchStart + network->miniBatchSize;
-            if (miniBatchEnd > batch->size)
-                miniBatchEnd = batch->size;
+            if (miniBatchEnd > dataset->size)
+                miniBatchEnd = dataset->size;
 
             int trueMiniSize = miniBatchEnd - miniBatchStart;
             if (trueMiniSize == 0)
@@ -338,12 +295,12 @@ void fit(Network *network, Dataset *dataset)
 
                 for (unsigned int j = 0; j < network->layersSizes[0]; j++)
                     workspaces[t].neurons[0][j] =
-                        batch->inputs[i + miniBatchStart][j];
+                        dataset->inputs[i + miniBatchStart][j];
 
                 feedForward(network, workspaces[t].neurons,
                             workspaces[t].dActZ);
                 backPropagation(network,
-                                batch->groundTruths[i + miniBatchStart],
+                                dataset->groundTruths[i + miniBatchStart],
                                 &workspaces[t], nablaW, nablaB);
             }
 
@@ -372,7 +329,7 @@ void fit(Network *network, Dataset *dataset)
 
             printf("Epoch %d - %d out of %ld batches\n", e + 1,
                    miniBatchStart / network->miniBatchSize + 1, miniCount);
-            if (miniBatchEnd < batch->size)
+            if (miniBatchEnd < dataset->size)
                 CLRLINE;
         }
     }
@@ -395,7 +352,6 @@ void fit(Network *network, Dataset *dataset)
         free(workspaces[i].dActZ);
     }
     free(workspaces);
-    freeBatch(batch);
 
     printf("%lf seconds elapsed\n", profile_getElapsed(&timer));
 }
@@ -406,13 +362,11 @@ void classify(Network *network, Dataset *dataset)
     for (unsigned int i = 0; i < network->layerCount; i++)
         neurons[i] = malloc(network->layersSizes[i] * sizeof(float));
 
-    Batch *batch = toBatch(dataset);
-
     size_t hits = 0;
-    for (size_t i = 0; i < batch->size; i++)
+    for (size_t i = 0; i < dataset->size; i++)
     {
         for (unsigned int j = 0; j < network->layersSizes[0]; j++)
-            neurons[0][j] = batch->inputs[i][j];
+            neurons[0][j] = dataset->inputs[i][j];
 
         feedForward(network, neurons, NULL);
 
@@ -427,18 +381,29 @@ void classify(Network *network, Dataset *dataset)
                 maxIndex = j;
             }
 
-            if (batch->groundTruths[i][j] == 1)
+            if (dataset->groundTruths[i][j] == 1)
                 trueMaxIndex = j;
         }
         if (maxIndex == trueMaxIndex)
             hits++;
     }
 
-    printf("%ld/%ld (%.2f%%)\n", hits, batch->size,
-           ((float)hits / batch->size) * 100.0f);
+    printf("%ld/%ld (%.2f%%)\n", hits, dataset->size,
+           ((float)hits / dataset->size) * 100.0f);
 
-    freeBatch(batch);
     for (unsigned int i = 0; i < network->layerCount; i++)
         free(neurons[i]);
     free(neurons);
+}
+
+void freeDataset(Dataset *dataset)
+{
+    for (size_t i = 0; i < dataset->size; i++)
+    {
+        free(dataset->inputs[i]);
+        free(dataset->groundTruths[i]);
+    }
+    free(dataset->inputs);
+    free(dataset->groundTruths);
+    free(dataset);
 }

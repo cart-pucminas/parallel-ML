@@ -1,37 +1,41 @@
+#ifndef ROOT_DIR
+#define ROOT_DIR "."
+#endif
+
 #include <omp.h>
 #include <stdio.h>
 
-#include "dataset.h"
 #include "mlp.h"
 #include "mnist_dataloader.h"
+#include "xor_dataloader.h"
 
 const char grayscaleMap[] = ".:-=+*#%@";
 
 int main()
 {
     omp_set_num_threads(4);
-    char *labels = "/input/train-labels.idx1-ubyte",
-         *images = "/input/train-images.idx3-ubyte";
+    char *labels = "/input/xor/train-labels",
+         *inputs = "/input/xor/train-inputs";
 
-    MnistDataset *learningDataset = loadDataset(labels, images);
-    if (learningDataset == NULL)
+    Dataset *learningDataset = NULL;
+    Dataset *classificationDataset = NULL;
+
+    if (!xor_loadDataset(&learningDataset, labels, inputs))
     {
-        printf("Dataset error: %s", dataset_getError());
+        printf("Dataset error: %s", xor_dataset_getError());
         return 1;
     }
 
-    labels = "/home/mateus/repos/perceptron/input/t10k-labels.idx1-ubyte",
-    images = "/home/mateus/repos/perceptron/input/t10k-images.idx3-ubyte";
+    labels = "/input/xor/test-labels", inputs = "/input/xor/test-inputs";
 
-    MnistDataset *classificationDataset = loadDataset(labels, images);
-    if (classificationDataset == NULL)
+    if (!xor_loadDataset(&classificationDataset, labels, inputs))
     {
-        printf("Dataset error: %s", dataset_getError());
+        printf("Dataset error: %s", xor_dataset_getError());
         return 1;
     }
 
-    unsigned int layers[] = {28 * 28, 256, 128, 10};
-    Network *n = constructNetwork(SIGMOID, 10, 4, layers, 0.5, 128);
+    unsigned int layers[] = {2, 2, 1};
+    Network *n = constructNetwork(1, 3, layers, 0.5, 100);
 
     fit(n, learningDataset);
     classify(n, classificationDataset);
