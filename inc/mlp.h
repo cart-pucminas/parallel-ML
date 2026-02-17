@@ -5,16 +5,17 @@
 
 typedef struct
 {
-    size_t epochs;
+    unsigned int epochs;
     float learningRate;
-    size_t miniBatchSize;
+    unsigned int miniBatchSize;
     float **weights;
     float **biases;
-    size_t *layersSizes;
-    size_t layerCount;
-    size_t maxLayerSize;
+    unsigned int *layersSizes;
+    unsigned int layerCount;
+    unsigned int maxLayerSize;
     size_t totalNeurons;
     size_t totalSynapses;
+    unsigned int seed;
 } Network;
 
 typedef struct
@@ -24,8 +25,9 @@ typedef struct
     size_t size;
 } Dataset;
 
-Network *constructNetwork(size_t epochs, size_t layerCount, size_t *layersSizes,
-                          float learningRate, size_t miniBatchSize);
+Network *constructNetwork(unsigned int epochs, unsigned int layerCount,
+                          unsigned int *layersSizes, float learningRate,
+                          unsigned int miniBatchSize, unsigned int seed);
 void freeNetwork(Network *network);
 void printNetwork(Network *network);
 int persistNetwork(Network *network, const char *path);
