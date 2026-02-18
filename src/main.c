@@ -7,8 +7,14 @@
 #error "flag NO_OMP should be defined alone"
 #endif
 
+#define UNKNOWN -1
+#define XOR 0
+#define MNIST 1
+
+#include <ctype.h>
 #include <omp.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "mlp.h"
 #include "mnist_dataloader.h"
@@ -114,13 +120,47 @@ int mnist()
     return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    printFlags();
+    int dataset = UNKNOWN;
 
 #ifndef NO_OMP
     omp_set_num_threads(4);
 #endif
 
-    return mnist();
+    if (argc == 1)
+        printf("No dataset was specified, running XOR\n");
+    else
+    {
+        char *arg = argv[1];
+        for (int i = 0; arg[i] != '\0'; i++)
+            arg[i] = (char)tolower(arg[i]);
+
+        if (strncmp(arg, "xor", 3) == 0)
+        {
+            printf("Running XOR\n");
+            dataset = XOR;
+        }
+        else if (strncmp(arg, "mnist", 5) == 0)
+        {
+            printf("Running MNIST\n");
+            dataset = MNIST;
+        }
+        else
+        {
+            printf("Unknown dataset, terminating execution\n");
+            dataset = UNKNOWN;
+        }
+    }
+
+    int status = 1;
+
+    printFlags();
+
+    if (dataset == XOR)
+        status = xor();
+    else if (dataset == MNIST)
+        status = mnist();
+
+    return status;
 }
