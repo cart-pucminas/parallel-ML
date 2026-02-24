@@ -10,6 +10,9 @@ pkgs.mkShell {
     pkg-config
     valgrind
     perf
-    python3
+    (python3.withPackages (ps: [
+      ps.numpy
+      ps.matplotlib
+    ]))
   ];
 }

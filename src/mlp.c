@@ -57,6 +57,10 @@ Network *constructNetwork(unsigned int epochs, unsigned int layerCount,
         network->totalSynapses += weights;
         network->weights[l - 1] = malloc(weights * sizeof(float));
 
+        float limit =
+            sqrt(6.0f / (float)(network->layersSizes[0] +
+                                network->layersSizes[network->layerCount - 1]));
+
         for (unsigned int n = 0; n < layersSizes[l]; n++)
         {
             for (unsigned int prevN = 0; prevN < network->layersSizes[l - 1];
@@ -173,7 +177,7 @@ void feedForward(Network *network, float **neurons, float **dActZ)
 #endif
         for (int j = 0; j < rows; j++)
         {
-            float z = 0;
+            float z = b[j];
 
 #ifdef VECTORIZED
 #pragma omp simd reduction(+ : z)
@@ -181,7 +185,6 @@ void feedForward(Network *network, float **neurons, float **dActZ)
             for (int k = 0; k < cols; k++)
                 z += prevL[k] * w[IDX2(j, k, cols)];
 
-            z += b[j];
             float a = 1.0f / (1.0f + expf(-z));
 
             dActZ[i - 1][j] = a * (1.0f - a);
