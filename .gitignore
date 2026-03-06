@@ -1,3 +1,5 @@
 .cache
 .obj
 bin
+results
+plots

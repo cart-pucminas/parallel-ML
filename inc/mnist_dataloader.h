@@ -1,7 +1,7 @@
 #ifndef MNIST_DATALOADER_H
 #define MNIST_DATALOADER_H
 
-#include <mlp.h>
+#include "dataset.h"
 
 int mnist_loadDataset(Dataset **dataset, const char *labelPath,
                       const char *imagesPath);

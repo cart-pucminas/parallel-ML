@@ -13,6 +13,8 @@ pkgs.mkShell {
     (python3.withPackages (ps: [
       ps.numpy
       ps.matplotlib
+      ps.seaborn
+      ps.pandas
     ]))
   ];
 }

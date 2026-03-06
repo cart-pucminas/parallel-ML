@@ -1,6 +1,4 @@
-
 #include "xor_dataloader.h"
-#include "mlp.h"
 
 #include <errno.h>
 #include <stdint.h>
