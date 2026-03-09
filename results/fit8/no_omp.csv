@@ -1,0 +1,11 @@
+Strategy,Instance,TotalTime,Accuracy
+Sequential,0,293.366801,0.910700
+Sequential,1,294.169757,0.937000
+Sequential,2,294.754912,0.944600
+Sequential,3,295.304779,0.948900
+Sequential,4,293.551270,0.952300
+Sequential,5,294.029216,0.955000
+Sequential,6,294.901477,0.955900
+Sequential,7,291.656397,0.956900
+Sequential,8,294.453968,0.957500
+Sequential,9,293.473596,0.958300

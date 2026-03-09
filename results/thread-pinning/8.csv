@@ -1,0 +1,11 @@
+Strategy,Instance,TotalTime,Accuracy
+Inter-sample SIMD,0,66.044270,0.910700
+Inter-sample SIMD,1,78.083470,0.937000
+Inter-sample SIMD,2,72.360314,0.944600
+Inter-sample SIMD,3,76.690086,0.948900
+Inter-sample SIMD,4,77.237107,0.952300
+Inter-sample SIMD,5,78.080490,0.955000
+Inter-sample SIMD,6,76.640952,0.955900
+Inter-sample SIMD,7,76.766482,0.956900
+Inter-sample SIMD,8,77.538837,0.957500
+Inter-sample SIMD,9,77.234120,0.958300

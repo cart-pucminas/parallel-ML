@@ -1,0 +1,11 @@
+Strategy,Instance,TotalTime,Accuracy
+Intra-layer,0,83.751677,0.910700
+Intra-layer,1,98.534090,0.937000
+Intra-layer,2,95.430777,0.944600
+Intra-layer,3,95.285817,0.948900
+Intra-layer,4,98.636656,0.952300
+Intra-layer,5,95.133258,0.955000
+Intra-layer,6,94.695604,0.955900
+Intra-layer,7,98.581848,0.956900
+Intra-layer,8,96.273655,0.957500
+Intra-layer,9,94.441658,0.958300

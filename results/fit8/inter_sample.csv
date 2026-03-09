@@ -1,0 +1,11 @@
+Strategy,Instance,TotalTime,Accuracy
+Inter-sample,0,70.694399,0.910700
+Inter-sample,1,77.265211,0.937000
+Inter-sample,2,77.693272,0.944600
+Inter-sample,3,82.318820,0.948900
+Inter-sample,4,76.159212,0.952300
+Inter-sample,5,79.339322,0.955000
+Inter-sample,6,79.492128,0.955900
+Inter-sample,7,78.702212,0.956900
+Inter-sample,8,78.629592,0.957500
+Inter-sample,9,81.701933,0.958300

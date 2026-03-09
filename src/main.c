@@ -402,13 +402,13 @@ void fit(Network *network, Dataset *dataset)
                 offsetB += network->layersSizes[i];
             }
 
-            //            printf("Epoch %u - %u/%u batches\n", e + 1,
-            //                   miniBatchStart / network->miniBatchSize + 1,
-            //                   miniCount);
-            //
-            //            if (miniBatchEnd < dataset->size)
-            //                CLRLINE;
+            // printf("Epoch %u - %u/%u batches\n", e + 1,
+            //         miniBatchStart / network->miniBatchSize + 1, miniCount);
+
+            // if (miniBatchEnd < dataset->size)
+            //     CLRLINE;
         }
+        fprintf(stderr, "Epoch %u done\n", e + 1);
     }
 
     free(nablaW);
@@ -431,7 +431,7 @@ void fit(Network *network, Dataset *dataset)
     free(workspaces);
 }
 
-void classify(Network *network, Dataset *dataset)
+void classify(Network *network, Dataset *dataset, unsigned int *hits)
 {
     float **neurons = malloc(network->layerCount * sizeof(float *));
     for (unsigned int i = 0; i < network->layerCount; i++)
@@ -445,7 +445,7 @@ void classify(Network *network, Dataset *dataset)
         dummyDActZ[j - 1] = malloc(network->layersSizes[j] * sizeof(float));
     }
 
-    unsigned int hits = 0;
+    *hits = 0;
     for (unsigned int i = 0; i < dataset->size; i++)
     {
         for (unsigned int j = 0; j < network->layersSizes[0]; j++)
@@ -468,11 +468,8 @@ void classify(Network *network, Dataset *dataset)
                 trueMaxIndex = j;
         }
         if (maxIndex == trueMaxIndex)
-            hits++;
+            (*hits)++;
     }
-
-    printf("%d/%zu (%.2f%%)\n", hits, dataset->size,
-           ((float)hits / dataset->size) * 100.0f);
 
     for (unsigned int i = 0; i < network->layerCount; i++)
         free(neurons[i]);
@@ -539,8 +536,8 @@ int mnist(Network **n, Dataset **learningDataset,
         return 1;
     }
 
-    unsigned int layers[] = {28 * 28, 100, 10};
-    *n = constructNetwork(1, 3, layers, 0.5, 120, 42);
+    unsigned int layers[] = {28 * 28, 256, 128, 10};
+    *n = constructNetwork(10, 4, layers, 0.5, 128, 42);
 
     return 0;
 }
@@ -592,10 +589,6 @@ void ffTests(Network *n, float **neurons, float **dummyDActZ,
 
 int main(void)
 {
-#ifndef NO_OMP
-    omp_set_num_threads(4);
-#endif
-
     Network *n = NULL;
     Dataset *learningDataset = NULL, *classificationDataset = NULL;
 
@@ -616,22 +609,32 @@ int main(void)
     strategyName = "Inter-sample SIMD";
 #endif
 
-    printf("Strategy,AvgTime,MaxTime\n");
+    printf("Strategy,Instance,TotalTime,Accuracy\n");
 
     Timer timer;
-    double sum = 0;
+    double totalTime = 0;
     double maxTime = 0;
+    unsigned int hits;
+
     for (int i = 0; i < 10; i++)
     {
         profile_start(&timer);
         fit(n, learningDataset);
         double time = profile_getElapsed(&timer);
-        sum += time;
-        maxTime = time > maxTime ? time : maxTime;
-        fprintf(stderr, "%d/10\n", i);
-    }
 
-    printf("%s,%f,%f", strategyName, sum / 10, maxTime);
+        classify(n, classificationDataset, &hits);
+        fprintf(stderr, "%d/%zu (%.2f%%)\n", hits, classificationDataset->size,
+                ((float)hits / classificationDataset->size) * 100.0f);
+
+        printf("%s,%d,%f,%f\n", strategyName, i, time,
+               (float)hits / classificationDataset->size);
+
+        totalTime += time;
+        if (time > maxTime)
+            maxTime = time;
+
+        fprintf(stderr, "Session %d/10 complete: %.4fs\n", i + 1, time);
+    }
 
     freeDataset(learningDataset);
     freeDataset(classificationDataset);
