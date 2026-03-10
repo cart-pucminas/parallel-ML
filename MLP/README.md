@@ -1,7 +1,7 @@
 # Learning Parallel Computing with Multilayer Perceptron Neural Networks
 
 - Author: Mateus Henrique Medeiros Diniz (mateushmdiniz@gmail.com)
-- Advisor: Henrique Cota de Freitas (cota@pucminas.com)
+- Advisor: Henrique Cota de Freitas (cota@pucminas.br)
 
 A Multilayer Perceptron made from scratch in C with the goal of tackling hard parallel programming concepts with a highly parallelizable example.
 
