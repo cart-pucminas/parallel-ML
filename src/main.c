@@ -545,12 +545,14 @@ int mnist(Network **n, Dataset **learningDataset,
 void ffTests(Network *n, float **neurons, float **dummyDActZ,
              Dataset *learningDataset)
 {
-#ifndef NO_OMP
     Timer timer;
     size_t samples = learningDataset->size;
 
     char *strategyName = "";
 
+#ifdef NO_OMP
+    strategyName = "Sequential";
+#endif
 #ifdef TEST_CRITICAL
     samples = 5000;
     strategyName = "Critical_OpenMP";
@@ -579,12 +581,16 @@ void ffTests(Network *n, float **neurons, float **dummyDActZ,
         double avgTime = totalIterationTime / learningDataset->size;
         double throughput = 1.0 / avgTime;
 
+#ifdef NO_OMP
+        printf("%s,%d,%d,%f,%f,%f\n", strategyName, 1,
+               inst + 1, totalIterationTime, avgTime, throughput);
+#else
         printf("%s,%d,%d,%f,%f,%f\n", strategyName, omp_get_max_threads(),
                inst + 1, totalIterationTime, avgTime, throughput);
+#endif
 
         fprintf(stderr, "Completed Instance %d/10\n", inst + 1);
     }
-#endif
 }
 
 int main(void)
@@ -626,7 +632,13 @@ int main(void)
         fprintf(stderr, "%d/%zu (%.2f%%)\n", hits, classificationDataset->size,
                 ((float)hits / classificationDataset->size) * 100.0f);
 
-        printf("%s,%d,%f,%f\n", strategyName, i, time,
+#ifdef NO_OMP
+        printf("1 thread");
+#else
+        printf("%d threads,", omp_get_thread_num());
+#endif
+
+        printf("%d,%f,%f\n", i, time,
                (float)hits / classificationDataset->size);
 
         totalTime += time;
