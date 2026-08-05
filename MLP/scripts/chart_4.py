@@ -30,15 +30,17 @@ def generate():
 
     plt.yscale('log')
 
-    plt.title(f'Performance Analysis: Fit under different thread numbers', fontsize=20, pad=20)
-    plt.ylabel('Total Time (Seconds) - Log Scale', fontsize=22)
-    plt.xlabel('Strategy', fontsize=22)
+    plt.title(f'Performance Analysis: Fit under different thread numbers', fontsize=25, pad=20)
+    plt.ylabel('Total Time (Seconds) - Log Scale', fontsize=25)
+    plt.xlabel('Strategy', fontsize=25)
+
+    plt.xticks(fontsize=18)
 
     for p in ax.patches:
         h = p.get_height()
         if h > 0:
             ax.annotate(f'{h:.2f}s', (p.get_x() + p.get_width() / 2., h),
-                        ha='center', va='bottom', fontsize=16, fontweight='bold',
+                        ha='center', va='bottom', fontsize=20, fontweight='bold',
                         xytext=(0, 10), textcoords='offset points')
 
     plt.tight_layout()

@@ -5,7 +5,7 @@ import os
 
 def generate():
     results_dir = './results/fit8'
-    output_path = './images/plots/chart_3.png'    
+    output_path = './plots/chart_3.png'    
 
     if not os.path.exists(results_dir):
         print(f"Error: Directory '{results_dir}' not found.")
@@ -30,11 +30,13 @@ def generate():
     plt.title(f'Accuracy Analysis: Fit routine', fontsize=25, pad=20)
     plt.ylabel('Validation Accuracy', fontsize=25)
     plt.xlabel('Training Session (Instance)', fontsize=25)
-    plt.xticks(range(10))
+    plt.xticks(range(10), fontsize=25)
+    plt.yticks(fontsize=22)
     
     plt.ylim(0.85, 1.0) 
 
-    plt.legend(title='Strategy', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend(title='Strategy', loc='lower right', 
+               fontsize=22, title_fontsize=25)
     plt.tight_layout()
     plt.savefig(output_path, dpi=300)
     print(f"generated: {output_path}")
